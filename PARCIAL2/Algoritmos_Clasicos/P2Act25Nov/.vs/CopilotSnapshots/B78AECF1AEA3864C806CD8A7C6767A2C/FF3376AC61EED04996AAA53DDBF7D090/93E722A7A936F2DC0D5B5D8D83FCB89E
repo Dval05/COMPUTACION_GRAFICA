@@ -1,0 +1,262 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+
+        internal class CDibujar
+        {
+            private Bitmap mBitmap;
+            private PictureBox mPictureBox;
+            private Point? primerPunto = null;
+            private Color colorLinea = Color.Black;
+            private int grosorLinea = 2;
+            private List<Point> pixelesActuales = new List<Point>();
+
+            public CDibujar()
+            {
+                mBitmap = null;
+                mPictureBox = null;
+            }
+
+            public void Initialize(PictureBox picCanvas)
+            {
+                mPictureBox = picCanvas;
+
+                if (mPictureBox.Image != null)
+                {
+                    mBitmap = new Bitmap(mPictureBox.Image);
+                }
+                else
+                {
+                    mBitmap = new Bitmap(mPictureBox.Width, mPictureBox.Height);
+                    using (Graphics g = Graphics.FromImage(mBitmap))
+                    {
+                        g.Clear(Color.White);
+                    }
+                    mPictureBox.Image = mBitmap;
+                }
+            }
+
+            public void SetColor(Color color)
+            {
+                colorLinea = color;
+            }
+
+            public void SetGrosor(int grosor)
+            {
+                grosorLinea = grosor;
+            }
+
+            public void ActualizarBitmap()
+            {
+                if (mPictureBox != null && mPictureBox.Image != null)
+                {
+                    mBitmap = new Bitmap(mPictureBox.Image);
+                }
+            }
+
+            // Algoritmo de Bresenham para calcular píxeles de una línea recta
+            private List<Point> CalcularPixelesLinea(Point p1, Point p2)
+            {
+                List<Point> pixeles = new List<Point>();
+
+                int x0 = p1.X;
+                int y0 = p1.Y;
+                int x1 = p2.X;
+                int y1 = p2.Y;
+
+                int dx = Math.Abs(x1 - x0);
+                int dy = Math.Abs(y1 - y0);
+                int sx = x0 < x1 ? 1 : -1;
+                int sy = y0 < y1 ? 1 : -1;
+                int err = dx - dy;
+
+                while (true)
+                {
+                    pixeles.Add(new Point(x0, y0));
+
+                    if (x0 == x1 && y0 == y1)
+                        break;
+
+                    int e2 = 2 * err;
+                    if (e2 > -dy)
+                    {
+                        err -= dy;
+                        x0 += sx;
+                    }
+                    if (e2 < dx)
+                    {
+                        err += dx;
+                        y0 += sy;
+                    }
+                }
+
+                return pixeles;
+            }
+
+            // Aplicar grosor a la línea
+            private List<Point> AplicarGrosor(List<Point> pixelesLinea)
+            {
+                if (grosorLinea <= 1)
+                    return pixelesLinea;
+
+                HashSet<Point> pixelesConGrosor = new HashSet<Point>();
+                int radio = grosorLinea / 2;
+
+                foreach (Point p in pixelesLinea)
+                {
+                    for (int dx = -radio; dx <= radio; dx++)
+                    {
+                        for (int dy = -radio; dy <= radio; dy++)
+                        {
+                            Point nuevoPunto = new Point(p.X + dx, p.Y + dy);
+                            if (nuevoPunto.X >= 0 && nuevoPunto.X < mBitmap.Width &&
+                                nuevoPunto.Y >= 0 && nuevoPunto.Y < mBitmap.Height)
+                            {
+                                pixelesConGrosor.Add(nuevoPunto);
+                            }
+                        }
+                    }
+                }
+
+                return pixelesConGrosor.ToList();
+            }
+
+            // Dibujar la línea en el bitmap
+            private void DibujarLinea(Point p1, Point p2)
+            {
+                List<Point> pixeles = CalcularPixelesLinea(p1, p2);
+                pixelesActuales = AplicarGrosor(pixeles);
+
+                using (Graphics g = Graphics.FromImage(mBitmap))
+                {
+                    foreach (Point pixel in pixelesActuales)
+                    {
+                        mBitmap.SetPixel(pixel.X, pixel.Y, colorLinea);
+                    }
+                }
+
+                if (mPictureBox != null)
+                {
+                    mPictureBox.Image = mBitmap;
+                    mPictureBox.Refresh();
+                }
+            }
+
+            // Dibujar una vista previa temporal de la línea
+            private void DibujarVistaPrevia(Point p1, Point p2, Graphics g)
+            {
+                using (Pen pen = new Pen(colorLinea, grosorLinea))
+                {
+                    pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+                    g.DrawLine(pen, p1, p2);
+                }
+            }
+
+            // Manejar el clic del mouse
+            public string OnMouseClick(int x, int y)
+            {
+                if (mBitmap == null)
+                {
+                    return "Error: No hay bitmap inicializado";
+                }
+
+                Point puntoActual = new Point(x, y);
+
+                if (primerPunto == null)
+                {
+                    // Primer clic: guardar el punto inicial
+                    primerPunto = puntoActual;
+                    return null; // No mostrar mensaje
+                }
+                else
+                {
+                    // Segundo clic: dibujar la línea
+                    DibujarLinea(primerPunto.Value, puntoActual);
+
+                    primerPunto = null;
+                    return null; // No mostrar mensaje
+                }
+            }
+
+            // Manejar el movimiento del mouse para vista previa
+            public void OnMouseMove(int x, int y, Graphics g)
+            {
+                if (primerPunto != null && g != null)
+                {
+                    Point puntoActual = new Point(x, y);
+                    DibujarVistaPrevia(primerPunto.Value, puntoActual, g);
+                }
+            }
+
+            // Generar la lista de píxeles que serán pintados
+            private string GenerarListaPixeles(Point p1, Point p2)
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine($"Línea dibujada desde ({p1.X}, {p1.Y}) hasta ({p2.X}, {p2.Y})");
+                sb.AppendLine($"Color: {colorLinea.Name}, Grosor: {grosorLinea}");
+                sb.AppendLine($"Total de píxeles pintados: {pixelesActuales.Count}");
+                sb.AppendLine("\nLista de píxeles:");
+
+                int contador = 0;
+                foreach (Point pixel in pixelesActuales.OrderBy(p => p.Y).ThenBy(p => p.X))
+                {
+                    sb.Append($"({pixel.X},{pixel.Y}) ");
+                    contador++;
+                    if (contador % 5 == 0)
+                        sb.AppendLine();
+                }
+
+                return sb.ToString();
+            }
+
+            // Cancelar la operación actual
+            public void Cancelar()
+            {
+                primerPunto = null;
+                pixelesActuales.Clear();
+            }
+
+            // Limpiar el canvas
+            public void Limpiar()
+            {
+                if (mBitmap != null)
+                {
+                    using (Graphics g = Graphics.FromImage(mBitmap))
+                    {
+                        g.Clear(Color.White);
+                    }
+
+                    if (mPictureBox != null)
+                    {
+                        mPictureBox.Image = mBitmap;
+                        mPictureBox.Refresh();
+                    }
+                }
+
+                primerPunto = null;
+                pixelesActuales.Clear();
+            }
+
+            public Bitmap ObtenerBitmap()
+            {
+                return mBitmap;
+            }
+
+            public bool TienePuntoInicial()
+            {
+                return primerPunto != null;
+            }
+
+            public Point? ObtenerPuntoInicial()
+            {
+                return primerPunto;
+            }
+        }
+    }

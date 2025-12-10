@@ -1,0 +1,221 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    internal class CColorear
+    {
+        private Bitmap mBitmap;
+        private int mPixelSize = 10; // Tamaño de cada píxel en la cuadrícula (configurable)
+        private int canvasPixelRows = 0;
+        private int canvasPixelCols = 0;
+        private Color targetColor; // Color objetivo a reemplazar
+        private PictureBox mPictureBox; // Referencia al PictureBox
+
+        public CColorear()
+        {
+            mBitmap = null;
+            mPictureBox = null;
+        }
+
+        public void Initialize(PictureBox picCanvas)
+        {
+            mPictureBox = picCanvas;
+
+            if (mPictureBox.Image != null)
+            {
+                mBitmap = new Bitmap(mPictureBox.Image);
+            }
+            else
+            {
+                mBitmap = new Bitmap(mPictureBox.Width, mPictureBox.Height);
+                using (Graphics g = Graphics.FromImage(mBitmap))
+                {
+                    g.Clear(Color.White);
+                }
+                mPictureBox.Image = mBitmap;
+            }
+
+            canvasPixelRows = mBitmap.Height;
+            canvasPixelCols = mBitmap.Width;
+        }
+
+        public void SetPixelSize(int pixelSize)
+        {
+            mPixelSize = pixelSize;
+        }
+
+        public void ActualizarBitmap()
+        {
+            if (mPictureBox != null && mPictureBox.Image != null)
+            {
+                mBitmap = new Bitmap(mPictureBox.Image);
+                canvasPixelRows = mBitmap.Height;
+                canvasPixelCols = mBitmap.Width;
+            }
+        }
+
+        private void PintarCuadrado(int gridX, int gridY, Color color)
+        {
+            using (Graphics g = Graphics.FromImage(mBitmap))
+            using (SolidBrush brush = new SolidBrush(color))
+            {
+                g.FillRectangle(brush, gridX * mPixelSize, gridY * mPixelSize, mPixelSize, mPixelSize);
+            }
+        }
+
+        private bool EsCuadradoDelColorObjetivo(int gridX, int gridY)
+        {
+            int pixelX = gridX * mPixelSize + mPixelSize / 2;
+            int pixelY = gridY * mPixelSize + mPixelSize / 2;
+            
+            if (pixelX < 0 || pixelX >= mBitmap.Width || pixelY < 0 || pixelY >= mBitmap.Height)
+                return false;
+            
+            Color pixelColor = mBitmap.GetPixel(pixelX, pixelY);
+            return pixelColor.ToArgb() == targetColor.ToArgb();
+        }
+        
+        private bool EsCuadradoBorde(int gridX, int gridY)
+        {
+            int pixelX = gridX * mPixelSize + mPixelSize / 2;
+            int pixelY = gridY * mPixelSize + mPixelSize / 2;
+            
+            if (pixelX < 0 || pixelX >= mBitmap.Width || pixelY < 0 || pixelY >= mBitmap.Height)
+                return true; // Fuera de límites = borde
+            
+            Color pixelColor = mBitmap.GetPixel(pixelX, pixelY);
+            int argb = pixelColor.ToArgb();
+            
+            return argb == Color.Blue.ToArgb() || 
+                   argb == Color.Red.ToArgb() || 
+                   argb == Color.Black.ToArgb();
+        }
+
+        private HashSet<Point> visitados; // Para evitar ciclos infinitos en recursión
+
+        private async Task MiFloodFillRecursivo(int gridX, int gridY, Color color, int gridCols, int gridRows)
+        {
+            // Validación de límites de la cuadrícula
+            if (gridX < 0 || gridX >= gridCols || gridY < 0 || gridY >= gridRows)
+            {
+                return;
+            }
+
+            // Crear punto actual
+            Point puntoActual = new Point(gridX, gridY);
+
+            // Si ya fue visitado, saltar
+            if (visitados.Contains(puntoActual))
+            {
+                return;
+            }
+
+            // Marcar como visitado
+            visitados.Add(puntoActual);
+
+            // Si es un borde, detener
+            if (EsCuadradoBorde(gridX, gridY))
+            {
+                return;
+            }
+
+            // Si es del color objetivo, pintar y continuar recursivamente
+            if (EsCuadradoDelColorObjetivo(gridX, gridY))
+            {
+                // Pintar el cuadrado completo
+                PintarCuadrado(gridX, gridY, color);
+
+                // Actualizar la imagen para mostrar animación
+                if (mPictureBox != null)
+                {
+                    mPictureBox.Image = mBitmap;
+                    mPictureBox.Refresh();
+                    await Task.Delay(10); // Pausa para ver la animación
+                }
+
+                // Llamadas recursivas en las 4 direcciones: Norte, Este, Sur, Oeste
+                await MiFloodFillRecursivo(gridX, gridY - 1, color, gridCols, gridRows); // Norte (arriba)
+                await MiFloodFillRecursivo(gridX + 1, gridY, color, gridCols, gridRows); // Este (derecha)
+                await MiFloodFillRecursivo(gridX, gridY + 1, color, gridCols, gridRows); // Sur (abajo)
+                await MiFloodFillRecursivo(gridX - 1, gridY, color, gridCols, gridRows); // Oeste (izquierda)
+            }
+        }
+
+
+      
+        public async Task IniciarFloodFill(int x, int y, Color nuevoColor)
+        {
+            if (mBitmap == null)
+            {
+                MessageBox.Show("No hay bitmap inicializado", "Error");
+                return;
+            }
+
+            // Convertir coordenadas de píxeles a coordenadas de cuadrícula
+            int gridX = x / mPixelSize;
+            int gridY = y / mPixelSize;
+            
+            // Calcular dimensiones de la cuadrícula
+            int gridCols = mBitmap.Width / mPixelSize;
+            int gridRows = mBitmap.Height / mPixelSize;
+
+            // Validar coordenadas de cuadrícula
+            if (gridX < 0 || gridX >= gridCols || gridY < 0 || gridY >= gridRows)
+            {
+                MessageBox.Show($"Coordenadas fuera de rango:\nGrid X: 0-{gridCols - 1}, Grid Y: 0-{gridRows - 1}", 
+                                "Error de validación");
+                return;
+            }
+
+            // Guardar el color objetivo (verificar el píxel central del cuadrado)
+            int pixelCenterX = gridX * mPixelSize + mPixelSize / 2;
+            int pixelCenterY = gridY * mPixelSize + mPixelSize / 2;
+            targetColor = mBitmap.GetPixel(pixelCenterX, pixelCenterY);
+
+            // Si el color objetivo es igual al nuevo color, no hacer nada
+            if (targetColor.ToArgb() == nuevoColor.ToArgb())
+            {
+                MessageBox.Show("El color seleccionado es el mismo que el área", "Información");
+                return;
+            }
+
+            try
+            {
+                // Inicializar el HashSet de visitados
+                visitados = new HashSet<Point>();
+                
+                // Llamar al algoritmo RECURSIVO con animación (usando coordenadas de cuadrícula)
+                await MiFloodFillRecursivo(gridX, gridY, nuevoColor, gridCols, gridRows);
+
+                // Limpiar visitados
+                visitados = null;
+
+                // Actualizar la imagen del PictureBox (final)
+                if (mPictureBox != null)
+                {
+                    mPictureBox.Image = mBitmap;
+                    mPictureBox.Refresh();
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al colorear: {ex.Message}\nStack: {ex.StackTrace}", "Error");
+            }
+        }
+
+        
+
+        public Bitmap ObtenerBitmap()
+        {
+            return mBitmap;
+        }
+    }
+}
+

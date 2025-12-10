@@ -1,0 +1,64 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    public partial class frmCircunferencia : Form
+    {
+        CCircunferencia objCircunferencia = new CCircunferencia();
+        CColorear objColorear = new CColorear();
+
+        public frmCircunferencia()
+        {
+            InitializeComponent();
+        }
+
+        private void btnCalcular_Click(object sender, EventArgs e)
+        {
+            if (objCircunferencia.ReadData(txtRadio, picCanvas))
+            {
+                objCircunferencia.DrawCircunference(picCanvas);
+            }
+        }
+
+        private void btnResetear_Click(object sender, EventArgs e)
+        {
+            objCircunferencia.InitializeData(txtRadio, picCanvas);
+            objColorear.Initialize(picCanvas);
+        }
+
+        private void btnSalir_Click(object sender, EventArgs e)
+        {
+            objCircunferencia.CloseForm(this);
+        }
+
+        private void btnColorear_Click(object sender, EventArgs e)
+        {
+                        // Mostrar diálogo de color
+            ColorDialog colorDialog = new ColorDialog();
+
+            if (colorDialog.ShowDialog() == DialogResult.OK)
+            {
+                // Actualizar bitmap
+                objColorear.ActualizarBitmap();
+                // Colorear desde el centro con el color elegido
+                objColorear.EncontrarCentroFigura();
+
+                objColorear.ColorearDesdeCentro(colorDialog.Color);
+                // Actualizar la imagen en el PictureBox
+            }
+
+        }
+
+    }
+
+}
+
+

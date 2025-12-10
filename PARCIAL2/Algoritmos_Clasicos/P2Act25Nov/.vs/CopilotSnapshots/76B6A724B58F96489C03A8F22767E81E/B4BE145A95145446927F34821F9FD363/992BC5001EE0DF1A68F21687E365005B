@@ -1,0 +1,145 @@
+﻿using System;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    public partial class frmCircunferencias : Form
+    {
+        private string algoritmo;
+        private CAlgoritmosCircunferencia motorC = new CAlgoritmosCircunferencia();
+        private CAlgoritmosRelleno motorR = new CAlgoritmosRelleno();
+
+        private const int PIXEL_SIZE = 15;
+        private Bitmap mainBitmap;
+
+        private bool modoRelleno = false;
+        private Color colorRelleno = Color.Yellow;
+
+        // VARIABLE IMPORTANTE: Guarda el color del último círculo dibujado
+        private Color colorTrazo = Color.Blue;
+
+        public frmCircunferencias(string alg)
+        {
+            InitializeComponent();
+            algoritmo = alg;
+            lblTitulo.Text = "Círculo: " + algoritmo;
+            picCanvas.Paint += PicCanvas_Paint;
+
+            cmbRelleno.Items.Add("Flood Fill (Por Fondo)");
+            cmbRelleno.Items.Add("Scanline Fill (Por Fondo)");
+            cmbRelleno.Items.Add("Boundary Fill (Por Borde)");
+            cmbRelleno.SelectedIndex = 0;
+        }
+
+        private void InicializarCanvas()
+        {
+            if (picCanvas.Width <= 0) return;
+            mainBitmap = new Bitmap(picCanvas.Width, picCanvas.Height);
+            using (Graphics g = Graphics.FromImage(mainBitmap))
+            {
+                g.Clear(Color.White);
+            }
+            picCanvas.Image = mainBitmap;
+            picCanvas.Refresh();
+        }
+
+        private void PicCanvas_Paint(object sender, PaintEventArgs e)
+        {
+            // Dibuja la cuadrícula SOLO visualmente (no afecta al relleno)
+            Graphics g = e.Graphics;
+            Pen p = new Pen(Color.FromArgb(230, 230, 230));
+            for (int i = 0; i < picCanvas.Width; i += PIXEL_SIZE) g.DrawLine(p, i, 0, i, picCanvas.Height);
+            for (int j = 0; j < picCanvas.Height; j += PIXEL_SIZE) g.DrawLine(p, 0, j, picCanvas.Width, j);
+
+            Pen axis = new Pen(Color.Black, 2);
+            int cx = (picCanvas.Width / 2 / PIXEL_SIZE) * PIXEL_SIZE;
+            int cy = (picCanvas.Height / 2 / PIXEL_SIZE) * PIXEL_SIZE;
+            g.DrawLine(axis, cx, 0, cx, picCanvas.Height);
+            g.DrawLine(axis, 0, cy, picCanvas.Width, cy);
+        }
+
+        private async void btnDibujar_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int r = int.Parse(txtRadio.Text);
+                if (r <= 0) return;
+
+                InicializarCanvas();
+
+                // Definir colores distintos para cada algoritmo si quieres
+                // Esto es clave para el Boundary Fill
+                switch (algoritmo)
+                {
+                    case "BRESENHAM": colorTrazo = Color.Blue; break;
+                    case "ALGEBRAICO": colorTrazo = Color.Red; break;
+                    case "PARAMETRICO": colorTrazo = Color.Green; break;
+                }
+
+                // Pasamos el color explícitamente al dibujador
+                switch (algoritmo)
+                {
+                    case "BRESENHAM": await motorC.DibujarBresenham(picCanvas, r, colorTrazo); break;
+                    case "ALGEBRAICO": await motorC.DibujarAlgebraico(picCanvas, r, colorTrazo); break;
+                    case "PARAMETRICO": await motorC.DibujarParametrico(picCanvas, r, colorTrazo); break;
+                }
+            }
+            catch { MessageBox.Show("Radio inválido"); }
+        }
+
+        private async void picCanvas_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (modoRelleno && mainBitmap != null)
+            {
+                // Obtenemos el color donde se hizo clic (normalmente Blanco si es dentro)
+                int gx = e.X / PIXEL_SIZE;
+                int gy = e.Y / PIXEL_SIZE;
+                int px = gx * PIXEL_SIZE + PIXEL_SIZE / 2;
+                int py = gy * PIXEL_SIZE + PIXEL_SIZE / 2;
+
+                if (px >= mainBitmap.Width || py >= mainBitmap.Height) return;
+                Color targetColor = mainBitmap.GetPixel(px, py);
+
+                int op = cmbRelleno.SelectedIndex;
+
+                // Opción 0 y 1 usan Target (color de fondo, ej: blanco)
+                // Opción 2 (Boundary) usa Boundary (color del borde, ej: azul)
+
+                if (op == 0)
+                    await motorR.FloodFillIterativo(mainBitmap, picCanvas, e.X, e.Y, targetColor, colorRelleno);
+                else if (op == 1)
+                    await motorR.ScanLineFill(mainBitmap, picCanvas, e.X, e.Y, targetColor, colorRelleno);
+                else
+                    // IMPORTANTE: Aquí pasamos 'colorTrazo' que es el color del círculo dibujado
+                    await motorR.BoundaryFill(mainBitmap, picCanvas, e.X, e.Y, colorTrazo, colorRelleno);
+            }
+        }
+
+        private void btnActivarRelleno_Click(object sender, EventArgs e)
+        {
+            modoRelleno = !modoRelleno;
+            btnActivarRelleno.BackColor = modoRelleno ? Color.LightGreen : SystemColors.Control;
+        }
+
+        private void btnColor_Click(object sender, EventArgs e)
+        {
+            ColorDialog cd = new ColorDialog();
+            if (cd.ShowDialog() == DialogResult.OK)
+            {
+                colorRelleno = cd.Color;
+                btnColor.BackColor = colorRelleno;
+            }
+        }
+
+        private void btnLimpiar_Click(object sender, EventArgs e)
+        {
+            InicializarCanvas();
+        }
+
+        private void frmCircunferencias_Load(object sender, EventArgs e)
+        {
+            InicializarCanvas();
+        }
+    }
+}

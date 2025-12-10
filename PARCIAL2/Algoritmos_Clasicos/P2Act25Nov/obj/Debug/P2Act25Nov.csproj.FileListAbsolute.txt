@@ -1,0 +1,14 @@
+C:\Users\andra\source\repos\P2Act25Nov\bin\Debug\P2Act25Nov.exe.config
+C:\Users\andra\source\repos\P2Act25Nov\bin\Debug\P2Act25Nov.exe
+C:\Users\andra\source\repos\P2Act25Nov\bin\Debug\P2Act25Nov.pdb
+C:\Users\andra\source\repos\P2Act25Nov\obj\Debug\P2Act25Nov.csproj.AssemblyReference.cache
+C:\Users\andra\source\repos\P2Act25Nov\obj\Debug\P2Act25Nov.Form1.resources
+C:\Users\andra\source\repos\P2Act25Nov\obj\Debug\P2Act25Nov.Properties.Resources.resources
+C:\Users\andra\source\repos\P2Act25Nov\obj\Debug\P2Act25Nov.csproj.GenerateResource.cache
+C:\Users\andra\source\repos\P2Act25Nov\obj\Debug\P2Act25Nov.csproj.CoreCompileInputs.cache
+C:\Users\andra\source\repos\P2Act25Nov\obj\Debug\P2Act25Nov.exe
+C:\Users\andra\source\repos\P2Act25Nov\obj\Debug\P2Act25Nov.pdb
+C:\Users\andra\source\repos\P2Act25Nov\obj\Debug\P2Act25Nov.exe.config
+C:\Users\andra\source\repos\P2Act25Nov\obj\Debug\P2Act25Nov.frmLineas.resources
+C:\Users\andra\source\repos\P2Act25Nov\obj\Debug\P2Act25Nov.frmCircunferencias.resources
+C:\Users\andra\source\repos\P2Act25Nov\obj\Debug\P2Act25Nov.frmRecortes.resources

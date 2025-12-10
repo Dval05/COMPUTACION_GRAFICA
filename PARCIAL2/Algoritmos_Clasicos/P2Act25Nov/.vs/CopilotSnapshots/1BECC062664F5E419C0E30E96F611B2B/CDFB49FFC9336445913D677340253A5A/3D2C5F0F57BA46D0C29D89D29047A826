@@ -1,0 +1,20 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    public partial class frmCircunferencia3 : Form
+    {
+        public frmCircunferencia3()
+        {
+            InitializeComponent();
+        }
+    }
+}

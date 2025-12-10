@@ -1,0 +1,308 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    internal class CPuntoMedio
+    {
+        private int mXo;
+        private int mYo;
+        private int mXf;
+        private int mYf;
+        private List<Point> mLinePoints;
+        private int mCurrentStep;
+        private Bitmap mBitmap;
+        private const int PIXEL_SIZE = 10; // Tamaño de cada píxel en la cuadrícula
+        private int canvasPixelRows = 0;
+        private int canvasPixelCols = 0;
+
+        // Propiedades para mostrar valores específicos de Punto Medio
+        public int DeltaX { get; private set; } = 0;
+        public int DeltaY { get; private set; } = 0;
+        public int D_Inicial { get; private set; } = 0;
+
+        public CPuntoMedio()
+        {
+            mXo = 0; mYo = 0;
+            mXf = 0; mYf = 0;
+            mLinePoints = new List<Point>();
+            mCurrentStep = 0;
+        }
+
+        public bool ReadData(TextBox txtXo, TextBox txtXf, TextBox txtYo, TextBox txtYf)
+        {
+            bool respuesta = true;
+            try
+            {
+                mXo = int.Parse(txtXo.Text);
+                mXf = int.Parse(txtXf.Text);
+                mYo = int.Parse(txtYo.Text);
+                mYf = int.Parse(txtYf.Text);
+                // Eliminada validación incorrecta que impedía valores negativos
+            }
+            catch
+            {
+                respuesta = false;
+                MessageBox.Show("Ingrese Datos válidos...!", "ERROR!");
+            }
+
+            return respuesta;
+        }
+
+        public void InitializeData(TextBox txtXo, TextBox txtXf, TextBox txtYo, TextBox txtYf, PictureBox picCanvas)
+        {
+            mXo = 0; mYo = 0;
+            mXf = 0; mYf = 0;
+
+            txtXo.Text = ""; txtYo.Text = "";
+            txtXf.Text = ""; txtYf.Text = "";
+
+            txtXo.Focus();
+            picCanvas.Refresh();
+        }
+        public void CloseForm(Form form)
+        {
+            form.Close();
+        }
+
+        // Método principal que ejecuta el algoritmo de Punto Medio
+        public void DrawPuntoMedio(PictureBox picCanvas)
+        {
+            if (!ValidarPuntos())
+            {
+                return;
+            }
+
+            InitializeGraphics(picCanvas);
+
+            // Centrar el origen correctamente
+            int centerX = picCanvas.Width / 2;
+            int centerY = picCanvas.Height / 2;
+
+            // Dibujar ejes de coordenadas
+            DibujarEjes(picCanvas, centerX, centerY);
+
+            // Calcular y dibujar el punto medio
+            CalcularYDibujarPuntoMedio(picCanvas, centerX, centerY);
+
+            // Dibujar línea que conecta los puntos
+            DibujarLinea(centerX, centerY);
+
+            // Dibujar puntos inicial y final
+            DibujarPuntosExtremos(centerX, centerY);
+        }
+
+        // Validar que los puntos no sean iguales
+        private bool ValidarPuntos()
+        {
+            if (mXo == mXf && mYo == mYf)
+            {
+                MessageBox.Show("Los puntos inicial y final son iguales", "Advertencia");
+                return false;
+            }
+            return true;
+        }
+
+        // Inicializar objetos gráficos
+        private void InitializeGraphics(PictureBox picCanvas)
+        {
+            mGraph = picCanvas.CreateGraphics();
+            mGraph.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            if (mPen == null)
+            {
+                mPen = new Pen(Color.Blue, 2);
+            }
+        }
+
+        // Algoritmo de Punto Medio
+        // Fórmulas: x = (x₁ + x₂) / 2
+        //           y = (y₁ + y₂) / 2
+        private void CalcularYDibujarPuntoMedio(PictureBox picCanvas, int centerX, int centerY)
+        {
+            // Paso 1: Sumar las coordenadas x
+            float sumaX = mXo + mXf;
+            
+            // Paso 2: Dividir por 2 para obtener x del punto medio
+            float xMedio = sumaX / 2.0f;
+
+            // Paso 3: Sumar las coordenadas y
+            float sumaY = mYo + mYf;
+            
+            // Paso 4: Dividir por 2 para obtener y del punto medio
+            float yMedio = sumaY / 2.0f;
+
+            // Convertir a coordenadas de pantalla
+            int screenXMedio = centerX + (int)(xMedio * SF);
+            int screenYMedio = centerY - (int)(yMedio * SF);
+
+            // Crear fuente para texto
+            Font font = new Font("Arial", 10, FontStyle.Bold);
+            SolidBrush textBrush = new SolidBrush(Color.Black);
+            SolidBrush pointBrush = new SolidBrush(Color.Red);
+
+            // Dibujar punto medio con animación
+            DibujarPuntoConAnimacion(picCanvas, centerX, centerY, screenXMedio, screenYMedio, 
+                                     pointBrush, Color.Red, 8);
+
+            // Mostrar las coordenadas del punto medio
+            string coordenadas = string.Format("M({0:F1}, {1:F1})", xMedio, yMedio);
+            mGraph.DrawString(coordenadas, font, textBrush, screenXMedio + 10, screenYMedio - 10);
+
+            // Mostrar el proceso de cálculo en el canvas
+            MostrarCalculos(picCanvas, xMedio, yMedio);
+
+            font.Dispose();
+            textBrush.Dispose();
+            pointBrush.Dispose();
+        }
+
+        // Mostrar los cálculos realizados
+        private void MostrarCalculos(PictureBox picCanvas, float xMedio, float yMedio)
+        {
+            Font font = new Font("Arial", 9);
+            SolidBrush brush = new SolidBrush(Color.DarkBlue);
+            
+            int x = 10;
+            int y = 10;
+            int lineHeight = 20;
+
+            mGraph.DrawString("Algoritmo de Punto Medio", new Font("Arial", 10, FontStyle.Bold), brush, x, y);
+            y += lineHeight + 5;
+
+            mGraph.DrawString(string.Format("Punto 1: ({0}, {1})", mXo, mYo), font, brush, x, y);
+            y += lineHeight;
+
+            mGraph.DrawString(string.Format("Punto 2: ({0}, {1})", mXf, mYf), font, brush, x, y);
+            y += lineHeight + 5;
+
+            mGraph.DrawString("Fórmulas:", new Font("Arial", 9, FontStyle.Bold), brush, x, y);
+            y += lineHeight;
+
+            mGraph.DrawString(string.Format("x = (x₁ + x₂) / 2 = ({0} + {1}) / 2 = {2:F1}", 
+                             mXo, mXf, xMedio), font, brush, x + 10, y);
+            y += lineHeight;
+
+            mGraph.DrawString(string.Format("y = (y₁ + y₂) / 2 = ({0} + {1}) / 2 = {2:F1}", 
+                             mYo, mYf, yMedio), font, brush, x + 10, y);
+            y += lineHeight + 5;
+
+            mGraph.DrawString(string.Format("Punto Medio: ({0:F1}, {1:F1})", xMedio, yMedio), 
+                             new Font("Arial", 9, FontStyle.Bold), new SolidBrush(Color.Red), x, y);
+
+            font.Dispose();
+            brush.Dispose();
+        }
+
+        // Dibujar punto con animación
+        private void DibujarPuntoConAnimacion(PictureBox picCanvas, int centerX, int centerY, 
+                                              int screenX, int screenY, SolidBrush brush, 
+                                              Color color, int tamaño)
+        {
+            for (int size = 2; size <= tamaño; size += 2)
+            {
+                picCanvas.Refresh();
+                mGraph = picCanvas.CreateGraphics();
+                mGraph.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                DibujarEjes(picCanvas, centerX, centerY);
+                DibujarLinea(centerX, centerY);
+                DibujarPuntosExtremos(centerX, centerY);
+
+                SolidBrush animBrush = new SolidBrush(color);
+                mGraph.FillEllipse(animBrush, screenX - size / 2, screenY - size / 2, size, size);
+                animBrush.Dispose();
+
+                System.Threading.Thread.Sleep(50);
+                Application.DoEvents();
+            }
+        }
+
+        // Dibujar los puntos extremos (inicial y final)
+        private void DibujarPuntosExtremos(int centerX, int centerY)
+        {
+            int screenXo = centerX + (int)(mXo * SF);
+            int screenYo = centerY - (int)(mYo * SF);
+            int screenXf = centerX + (int)(mXf * SF);
+            int screenYf = centerY - (int)(mYf * SF);
+
+            SolidBrush brushInicial = new SolidBrush(Color.Blue);
+            SolidBrush brushFinal = new SolidBrush(Color.Green);
+            Font font = new Font("Arial", 9);
+
+            // Punto inicial
+            mGraph.FillEllipse(brushInicial, screenXo - 4, screenYo - 4, 8, 8);
+            mGraph.DrawString(string.Format("P1({0},{1})", mXo, mYo), font, brushInicial, 
+                             screenXo + 10, screenYo - 10);
+
+            // Punto final
+            mGraph.FillEllipse(brushFinal, screenXf - 4, screenYf - 4, 8, 8);
+            mGraph.DrawString(string.Format("P2({0},{1})", mXf, mYf), font, brushFinal, 
+                             screenXf + 10, screenYf - 10);
+
+            brushInicial.Dispose();
+            brushFinal.Dispose();
+            font.Dispose();
+        }
+
+        // Dibujar línea que conecta los puntos
+        private void DibujarLinea(int centerX, int centerY)
+        {
+            int startScreenX = centerX + (int)(mXo * SF);
+            int startScreenY = centerY - (int)(mYo * SF);
+            int endScreenX = centerX + (int)(mXf * SF);
+            int endScreenY = centerY - (int)(mYf * SF);
+
+            Pen linePen = new Pen(Color.LightGray, 2);
+            linePen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+            mGraph.DrawLine(linePen, startScreenX, startScreenY, endScreenX, endScreenY);
+
+            linePen.Dispose();
+        }
+
+        // Dibujar ejes de coordenadas
+        private void DibujarEjes(PictureBox picCanvas, int centerX, int centerY)
+        {
+            Pen ejesPen = new Pen(Color.LightGray, 1);
+            Pen ejesPenPrincipal = new Pen(Color.Black, 2);
+
+            // Eje X (horizontal)
+            mGraph.DrawLine(ejesPenPrincipal, 0, centerY, picCanvas.Width, centerY);
+
+            // Eje Y (vertical)
+            mGraph.DrawLine(ejesPenPrincipal, centerX, 0, centerX, picCanvas.Height);
+
+            // Marcas en el eje X
+            for (int i = -(int)(centerX / SF); i <= (int)(centerX / SF); i++)
+            {
+                int x = centerX + (int)(i * SF);
+                if (x >= 0 && x <= picCanvas.Width)
+                {
+                    mGraph.DrawLine(ejesPen, x, centerY - 3, x, centerY + 3);
+                }
+            }
+
+            // Marcas en el eje Y
+            for (int i = -(int)(centerY / SF); i <= (int)(centerY / SF); i++)
+            {
+                int y = centerY - (int)(i * SF);
+                if (y >= 0 && y <= picCanvas.Height)
+                {
+                    mGraph.DrawLine(ejesPen, centerX - 3, y, centerX + 3, y);
+                }
+            }
+
+            ejesPen.Dispose();
+            ejesPenPrincipal.Dispose();
+        }
+
+    }
+}
+
+
+

@@ -1,0 +1,214 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    public partial class frmDibujosLineas : Form
+    {
+        public frmDibujosLineas()
+        {
+            InitializeComponent();
+            InicializarComponentes();
+        }
+
+        private CDibujar dibujar;
+        private CRellenoFigLineas colorear;
+        private CCohenSutherland cohenSutherland;
+        private bool modoDibujar = true;
+
+
+        private void InicializarComponentes()
+        {
+            // Inicializar las clases
+            dibujar = new CDibujar();
+            colorear = new CRellenoFigLineas();
+            cohenSutherland = new CCohenSutherland();
+
+            dibujar.Initialize(picCanvas);
+            colorear.Initialize(picCanvas);
+            cohenSutherland.Initialize(picCanvas);
+
+            // Configurar eventos
+            btnGraficar.Click += BtnGraficar_Click;
+            btnColorear.Click += BtnColorear_Click;
+            btnResetear.Click += BtnResetear_Click;
+            btnSalir.Click += BtnSalir_Click;
+            btnDefinirVentana.Click += BtnDefinirVentana_Click;
+            btnAplicarRecorte.Click += BtnAplicarRecorte_Click;
+
+            picCanvas.MouseClick += PicCanvas_MouseClick;
+            picCanvas.Paint += PicCanvas_Paint;
+            picCanvas.MouseMove += PicCanvas_MouseMove;
+
+            // Configurar el color y grosor inicial
+            dibujar.SetColor(Color.Black);
+            dibujar.SetGrosor(2);
+
+            // Estado inicial
+            modoDibujar = true;
+            ActualizarEstadoBotones();
+        }
+
+        private void BtnGraficar_Click(object sender, EventArgs e)
+        {
+            modoDibujar = true;
+            dibujar.ActualizarBitmap();
+            ActualizarEstadoBotones();
+        }
+
+        private void BtnColorear_Click(object sender, EventArgs e)
+        {
+            modoDibujar = false;
+            colorear.ActualizarBitmap();
+            ActualizarEstadoBotones();
+        }
+
+        private void BtnResetear_Click(object sender, EventArgs e)
+        {
+            dibujar.Limpiar();
+            colorear.ActualizarBitmap();
+            cohenSutherland.Limpiar();
+        }
+
+        private void BtnSalir_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void PicCanvas_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (modoDibujar)
+            {
+                dibujar.OnMouseClick(e.X, e.Y);
+            }
+            else
+            {
+                // Modo colorear
+                ColorDialog colorDialog = new ColorDialog();
+                if (colorDialog.ShowDialog() == DialogResult.OK)
+                {
+                    Task.Run(async () =>
+                    {
+                        await colorear.IniciarFloodFill(e.X, e.Y, colorDialog.Color);
+
+                        // Actualizar el bitmap del dibujador en el thread UI
+                        if (picCanvas.InvokeRequired)
+                        {
+                            picCanvas.Invoke(new Action(() =>
+                            {
+                                dibujar.ActualizarBitmap();
+                            }));
+                        }
+                        else
+                        {
+                            dibujar.ActualizarBitmap();
+                        }
+                    });
+                }
+            }
+        }
+
+        private void PicCanvas_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (modoDibujar && dibujar.TienePuntoInicial())
+            {
+                picCanvas.Invalidate();
+            }
+        }
+
+        private void PicCanvas_Paint(object sender, PaintEventArgs e)
+        {
+            if (modoDibujar && dibujar.TienePuntoInicial())
+            {
+                Point? puntoInicial = dibujar.ObtenerPuntoInicial();
+                if (puntoInicial.HasValue)
+                {
+                    Point posicionMouse = picCanvas.PointToClient(Cursor.Position);
+                    dibujar.OnMouseMove(posicionMouse.X, posicionMouse.Y, e.Graphics);
+                }
+            }
+        }
+
+        private void ActualizarEstadoBotones()
+        {
+            if (modoDibujar)
+            {
+                btnGraficar.BackColor = Color.LightGreen;
+                btnColorear.BackColor = SystemColors.Control;
+            }
+            else
+            {
+                btnGraficar.BackColor = SystemColors.Control;
+                btnColorear.BackColor = Color.LightBlue;
+            }
+        }
+
+        private void BtnDefinirVentana_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int xMin = int.Parse(txtXMin.Text);
+                int yMin = int.Parse(txtYMin.Text);
+                int xMax = int.Parse(txtXMax.Text);
+                int yMax = int.Parse(txtYMax.Text);
+
+                if (xMin >= xMax || yMin >= yMax)
+                {
+                    MessageBox.Show("Los valores mínimos deben ser menores que los máximos.", 
+                        "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                cohenSutherland.SetVentanaRecorte(xMin, yMin, xMax, yMax);
+                dibujar.ActualizarBitmap();
+                cohenSutherland.DibujarVentanaRecorte(Color.Red);
+                
+                MessageBox.Show($"Ventana de recorte definida: ({xMin},{yMin}) a ({xMax},{yMax})", 
+                    "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (FormatException)
+            {
+                MessageBox.Show("Por favor, ingrese valores numéricos válidos.", 
+                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnAplicarRecorte_Click(object sender, EventArgs e)
+        {
+            var lineas = dibujar.ObtenerLineasDibujadas();
+            
+            if (lineas.Count == 0)
+            {
+                MessageBox.Show("No hay líneas dibujadas para recortar.", 
+                    "Información", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            cohenSutherland.Limpiar();
+            
+            foreach (var linea in lineas)
+            {
+                cohenSutherland.AgregarLinea(linea.Item1, linea.Item2);
+            }
+
+            cohenSutherland.AplicarRecorte();
+            cohenSutherland.DibujarLineasRecortadas(Color.Blue, 2);
+
+            int cantidadOriginal = cohenSutherland.GetCantidadLineasOriginales();
+            int cantidadRecortada = cohenSutherland.GetCantidadLineasRecortadas();
+
+            MessageBox.Show($"Algoritmo Cohen-Sutherland aplicado:\n" +
+                $"Líneas originales: {cantidadOriginal}\n" +
+                $"Líneas recortadas (visibles): {cantidadRecortada}\n" +
+                $"Líneas eliminadas: {cantidadOriginal - cantidadRecortada}",
+                "Resultado", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+    }
+}

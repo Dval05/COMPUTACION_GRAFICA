@@ -1,0 +1,181 @@
+﻿using System;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    internal class CColorear
+    {
+        private Bitmap mBitmap;
+        private const int PIXEL_SIZE = 10; // Tamaño de cada píxel en la cuadrícula
+        private int canvasPixelRows = 0;
+        private int canvasPixelCols = 0;
+        private Color targetColor; // Color objetivo a reemplazar
+        private PictureBox mPictureBox; // Referencia al PictureBox
+
+        public CColorear()
+        {
+            mBitmap = null;
+            mPictureBox = null;
+        }
+
+        // Inicializar con el PictureBox y Bitmap
+     
+        // Función FloodFill recursiva universal
+        // Sigue el patrón: verifica color, pinta, y llama recursivamente en 4 direcciones
+        public void MiFloodFill(int x, int y, Color color)
+        {
+            // Validación de límites - asegurar que estamos dentro del bitmap
+            if (x < 0 || x >= canvasPixelCols || y < 0 || y >= canvasPixelRows)
+            {
+                return; // Fuera de límites
+            }
+
+            // Validar que el bitmap existe
+            if (mBitmap == null)
+            {
+                return;
+            }
+
+            // Obtener el color del píxel actual
+            Color currentColor = mBitmap.GetPixel(x, y);
+
+            // Si el color actual es diferente al color objetivo, detener
+            if (currentColor != targetColor)
+            {
+                return;
+            }
+
+            // Si el color actual ya es el color de reemplazo, detener (evitar recursión infinita)
+            if (currentColor == color)
+            {
+                return;
+            }
+
+            // Pintar el píxel actual con el nuevo color
+            mBitmap.SetPixel(x, y, color);
+
+            // Llamadas recursivas en las 4 direcciones (arriba, derecha, abajo, izquierda)
+            MiFloodFill(x, y + 1, color);  // Abajo
+            MiFloodFill(x + 1, y, color);  // Derecha
+            MiFloodFill(x, y - 1, color);  // Arriba
+            MiFloodFill(x - 1, y, color);  // Izquierda
+        }
+
+        // Método público para iniciar el FloodFill desde un punto
+        public void IniciarFloodFill(int x, int y, Color nuevoColor)
+        {
+            if (mBitmap == null)
+            {
+                MessageBox.Show("No hay bitmap inicializado", "Error");
+                return;
+            }
+
+            // Validar coordenadas iniciales
+            if (x < 0 || x >= canvasPixelCols || y < 0 || y >= canvasPixelRows)
+            {
+                MessageBox.Show($"Coordenadas fuera de rango:\nX: 0-{canvasPixelCols - 1}, Y: 0-{canvasPixelRows - 1}", 
+                                "Error de validación");
+                return;
+            }
+            targetColor = mBitmap.GetPixel(x, y);
+            if (targetColor == nuevoColor)
+            {
+                MessageBox.Show("El color seleccionado es el mismo que el área", "Información");
+                return;
+            }
+
+            try
+            {
+                MiFloodFill(x, y, nuevoColor);
+
+                if (mPictureBox != null)
+                {
+                    mPictureBox.Refresh();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al colorear: {ex.Message}", "Error");
+            }
+        }
+
+        // Método alternativo usando Stack (no recursivo) - más eficiente para áreas grandes
+        public void FloodFillIterativo(int x, int y, Color nuevoColor)
+        {
+            if (mBitmap == null)
+            {
+                MessageBox.Show("No hay bitmap inicializado", "Error");
+                return;
+            }
+
+            // Validar coordenadas iniciales
+            if (x < 0 || x >= canvasPixelCols || y < 0 || y >= canvasPixelRows)
+            {
+                MessageBox.Show($"Coordenadas fuera de rango:\nX: 0-{canvasPixelCols - 1}, Y: 0-{canvasPixelRows - 1}", 
+                                "Error de validación");
+                return;
+            }
+
+            // Obtener el color objetivo
+            Color colorObjetivo = mBitmap.GetPixel(x, y);
+
+            // Si el color objetivo es igual al nuevo color, no hacer nada
+            if (colorObjetivo == nuevoColor)
+            {
+                return;
+            }
+
+            // Usar un Stack para evitar recursión (más eficiente)
+            Stack<Point> pixels = new Stack<Point>();
+            pixels.Push(new Point(x, y));
+
+            while (pixels.Count > 0)
+            {
+                Point punto = pixels.Pop();
+
+                // Validar límites
+                if (punto.X < 0 || punto.X >= canvasPixelCols || 
+                    punto.Y < 0 || punto.Y >= canvasPixelRows)
+                {
+                    continue;
+                }
+
+                // Verificar si el color coincide con el objetivo
+                if (mBitmap.GetPixel(punto.X, punto.Y) == colorObjetivo)
+                {
+                    // Pintar el píxel
+                    mBitmap.SetPixel(punto.X, punto.Y, nuevoColor);
+
+                    // Agregar los 4 vecinos al stack
+                    pixels.Push(new Point(punto.X, punto.Y + 1));  // Abajo
+                    pixels.Push(new Point(punto.X + 1, punto.Y));  // Derecha
+                    pixels.Push(new Point(punto.X, punto.Y - 1));  // Arriba
+                    pixels.Push(new Point(punto.X - 1, punto.Y));  // Izquierda
+                }
+            }
+
+            // Refrescar el PictureBox
+            if (mPictureBox != null)
+            {
+                mPictureBox.Refresh();
+            }
+        }
+
+        // Obtener el color en una posición específica
+        public Color ObtenerColor(int x, int y)
+        {
+            if (mBitmap == null || x < 0 || x >= canvasPixelCols || y < 0 || y >= canvasPixelRows)
+            {
+                return Color.Empty;
+            }
+
+            return mBitmap.GetPixel(x, y);
+        }
+    }
+}

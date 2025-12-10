@@ -1,0 +1,48 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace P2Act25Nov
+{
+    internal class CColorear
+    {
+        private List<Point> mLinePoints;
+        private int mCurrentStep;
+        private Bitmap mBitmap;
+        private const int PIXEL_SIZE = 10; // Tamaño de cada píxel en la cuadrícula
+        private int canvasPixelRows = 0;
+        private int canvasPixelCols = 0;
+
+        private void FloodFill(Bitmap bmp, Point pt, Color targetColor, Color replacementColor)
+        {
+            Stack<Point> pixels = new Stack<Point>();
+            targetColor = bmp.GetPixel(pt.X, pt.Y);
+            pixels.Push(pt);
+
+            while (pixels.Count > 0)
+            {
+                Point a = pixels.Pop();
+                if (a.X < bmp.Width && a.X > 0 &&
+                        a.Y < bmp.Height && a.Y > 0)//make sure we stay within bounds
+                {
+
+                    if (bmp.GetPixel(a.X, a.Y) == targetColor)
+                    {
+                        bmp.SetPixel(a.X, a.Y, replacementColor);
+                        pixels.Push(new Point(a.X - 1, a.Y));
+                        pixels.Push(new Point(a.X + 1, a.Y));
+                        pixels.Push(new Point(a.X, a.Y - 1));
+                        pixels.Push(new Point(a.X, a.Y + 1));
+                    }
+                }
+            }
+            pictureBox1.Refresh(); //refresh our main picture box
+            return;
+        }
+
+    }
+
+    }

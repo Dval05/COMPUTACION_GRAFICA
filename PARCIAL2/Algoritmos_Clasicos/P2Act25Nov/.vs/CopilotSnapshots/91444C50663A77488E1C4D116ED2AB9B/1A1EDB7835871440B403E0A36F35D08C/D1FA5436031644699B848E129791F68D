@@ -1,0 +1,385 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    internal class CPuntoMedio
+    {
+        private int mXo;
+        private int mYo;
+        private int mXf;
+        private int mYf;
+        private List<Point> mLinePoints;
+        private int mCurrentStep;
+        private Bitmap mBitmap;
+        private const int PIXEL_SIZE = 10; // Tamaño de cada píxel en la cuadrícula
+        private int canvasPixelRows = 0;
+        private int canvasPixelCols = 0;
+
+        // Propiedades para mostrar valores específicos de Punto Medio
+        public int DeltaX { get; private set; } = 0;
+        public int DeltaY { get; private set; } = 0;
+        public int D_Inicial { get; private set; } = 0;
+
+        public CPuntoMedio()
+        {
+            mXo = 0; mYo = 0;
+            mXf = 0; mYf = 0;
+            mLinePoints = new List<Point>();
+            mCurrentStep = 0;
+        }
+
+        public bool ReadData(TextBox txtXo, TextBox txtXf, TextBox txtYo, TextBox txtYf)
+        {
+            bool respuesta = true;
+            try
+            {
+                mXo = int.Parse(txtXo.Text);
+                mXf = int.Parse(txtXf.Text);
+                mYo = int.Parse(txtYo.Text);
+                mYf = int.Parse(txtYf.Text);
+                // Coordenadas negativas permitidas
+            }
+            catch
+            {
+                respuesta = false;
+                MessageBox.Show("Ingrese Datos válidos...!", "ERROR!");
+            }
+
+            return respuesta;
+        }
+
+        public void InitializeData(TextBox txtXo, TextBox txtXf, TextBox txtYo, TextBox txtYf, PictureBox picCanvas)
+        {
+            mXo = 0; mYo = 0;
+            mXf = 0; mYf = 0;
+
+            txtXo.Text = ""; txtYo.Text = "";
+            txtXf.Text = ""; txtYf.Text = "";
+
+            mLinePoints.Clear();
+            mCurrentStep = 0;
+            picCanvas.Image = null;
+            picCanvas.Refresh();
+
+            txtXo.Focus();
+        }
+        public void CloseForm(Form form)
+        {
+            form.Close();
+        }
+
+        // Método principal que ejecuta el algoritmo de Punto Medio
+        public async void DrawPuntoMedio(PictureBox picCanvas)
+        {
+            if (!ValidarPuntos())
+            {
+                return;
+            }
+
+            // Calcular dimensiones en píxeles
+            canvasPixelRows = picCanvas.Height / PIXEL_SIZE;
+            canvasPixelCols = picCanvas.Width / PIXEL_SIZE;
+
+            // Calcular límites con origen centrado
+            int maxX = canvasPixelCols / 2;
+            int minX = -maxX;
+            int maxY = canvasPixelRows / 2;
+            int minY = -maxY;
+
+            // Validar que los puntos estén dentro del canvas
+            if (mXo < minX || mXo > maxX || mXf < minX || mXf > maxX ||
+                mYo < minY || mYo > maxY || mYf < minY || mYf > maxY)
+            {
+                MessageBox.Show($"Las coordenadas deben estar dentro del rango:\nX: {minX} a {maxX}\nY: {minY} a {maxY}",
+                                "Error de validación");
+                return;
+            }
+
+            // Calcular todos los puntos según el algoritmo de Punto Medio
+            CalculateMidpoint();
+
+            // Dibujar con animación
+            await DrawCompleteAnimated(picCanvas);
+        }
+
+        // Validar que los puntos no sean iguales
+        private bool ValidarPuntos()
+        {
+            if (mXo == mXf && mYo == mYf)
+            {
+                MessageBox.Show("Los puntos inicial y final son iguales", "Advertencia");
+                return false;
+            }
+            return true;
+        }
+
+        // Algoritmo de Punto Medio para líneas
+        // Similar a Bresenham pero usa punto medio para decisión
+        private void CalculateMidpoint()
+        {
+            mLinePoints.Clear();
+
+            int dx = Math.Abs(mXf - mXo);
+            int dy = Math.Abs(mYf - mYo);
+
+            DeltaX = dx;
+            DeltaY = dy;
+
+            int sx = (mXo < mXf) ? 1 : -1;
+            int sy = (mYo < mYf) ? 1 : -1;
+
+            int x = mXo;
+            int y = mYo;
+
+            // Algoritmo de Punto Medio
+            if (dx > dy)
+            {
+                // Pendiente < 1
+                int d = 2 * dy - dx;
+                D_Inicial = d;
+
+                mLinePoints.Add(new Point(x, y));
+
+                while (x != mXf)
+                {
+                    x += sx;
+
+                    if (d < 0)
+                    {
+                        d = d + 2 * dy;
+                    }
+                    else
+                    {
+                        y += sy;
+                        d = d + 2 * dy - 2 * dx;
+                    }
+
+                    mLinePoints.Add(new Point(x, y));
+                }
+            }
+            else
+            {
+                // Pendiente >= 1
+                int d = 2 * dx - dy;
+                D_Inicial = d;
+
+                mLinePoints.Add(new Point(x, y));
+
+                while (y != mYf)
+                {
+                    y += sy;
+
+                    if (d < 0)
+                    {
+                        d = d + 2 * dx;
+                    }
+                    else
+                    {
+                        x += sx;
+                        d = d + 2 * dx - 2 * dy;
+                    }
+
+                    mLinePoints.Add(new Point(x, y));
+                }
+            }
+
+            mCurrentStep = 0;
+        }
+
+        // Muestra todos los pasos como animación
+        private async Task DrawCompleteAnimated(PictureBox picCanvas)
+        {
+            InitializeCanvas(picCanvas);
+
+            for (int i = 0; i < mLinePoints.Count; i++)
+            {
+                mCurrentStep = i;
+                DrawUpToStep(picCanvas, i);
+                await Task.Delay(50);
+            }
+        }
+
+        // Dibuja todos los puntos hasta el paso actual
+        private void DrawUpToStep(PictureBox picCanvas, int step)
+        {
+            InitializeCanvas(picCanvas);
+
+            // Centro del canvas
+            int centerX = canvasPixelCols / 2;
+            int centerY = canvasPixelRows / 2;
+
+            // 1. Pintar los puntos (discretización) PRIMERO
+            for (int i = 0; i <= Math.Min(step, mLinePoints.Count - 1); i++)
+            {
+                Point p = mLinePoints[i];
+                // Convertir coordenadas lógicas a coordenadas de pantalla
+                int screenX = centerX + p.X;
+                int screenY = centerY - p.Y;
+                Color pointColor = (i == step) ? Color.Red : Color.Blue;
+                DrawPixel(screenX, screenY, pointColor);
+            }
+
+            // 2. Dibujar la línea continua desde el punto inicial hasta el punto actual
+            if (step >= 0 && step < mLinePoints.Count && mLinePoints.Count > 1)
+            {
+                using (Graphics g = Graphics.FromImage(mBitmap))
+                {
+                    g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                    Point currentPoint = mLinePoints[step];
+
+                    // Convertir coordenadas lógicas a píxeles de pantalla
+                    int screenX1 = (centerX + mXo) * PIXEL_SIZE + PIXEL_SIZE / 2;
+                    int screenY1 = (centerY - mYo) * PIXEL_SIZE + PIXEL_SIZE / 2;
+                    int screenX2 = (centerX + currentPoint.X) * PIXEL_SIZE + PIXEL_SIZE / 2;
+                    int screenY2 = (centerY - currentPoint.Y) * PIXEL_SIZE + PIXEL_SIZE / 2;
+
+                    // Línea desde inicio hasta el paso actual
+                    using (Pen thickPen = new Pen(Color.Green, 2))
+                    {
+                        g.DrawLine(thickPen, screenX1, screenY1, screenX2, screenY2);
+                    }
+                }
+            }
+
+            // Mostrar información del punto actual
+            DrawInfo(step);
+
+            picCanvas.Image = mBitmap;
+        }
+
+        // Inicializar el canvas con cuadrícula
+        private void InitializeCanvas(PictureBox picCanvas)
+        {
+            if (mBitmap == null || mBitmap.Width != picCanvas.Width || mBitmap.Height != picCanvas.Height)
+                mBitmap = new Bitmap(picCanvas.Width, picCanvas.Height);
+
+            using (Graphics g = Graphics.FromImage(mBitmap))
+            {
+                g.Clear(Color.White);
+                DrawGrid(g, picCanvas.Width, picCanvas.Height);
+            }
+        }
+
+        // Dibujar cuadrícula con ejes principales
+        private void DrawGrid(Graphics g, int width, int height)
+        {
+            using (Pen gridPen = new Pen(Color.LightGray, 1))
+            using (Pen axisPen = new Pen(Color.Black, 2))
+            {
+                // Líneas verticales
+                for (int x = 0; x < width; x += PIXEL_SIZE)
+                {
+                    g.DrawLine(gridPen, x, 0, x, height);
+                }
+
+                // Líneas horizontales
+                for (int y = 0; y < height; y += PIXEL_SIZE)
+                {
+                    g.DrawLine(gridPen, 0, y, width, y);
+                }
+
+                // Dibujar ejes principales (X e Y) en el centro
+                int centerX = width / 2;
+                int centerY = height / 2;
+
+                // Eje Y (vertical) en el centro
+                g.DrawLine(axisPen, centerX, 0, centerX, height);
+
+                // Eje X (horizontal) en el centro
+                g.DrawLine(axisPen, 0, centerY, width, centerY);
+
+                // Etiquetas de origen (0,0)
+                using (Font font = new Font("Arial", 8))
+                using (SolidBrush brush = new SolidBrush(Color.Black))
+                {
+                    g.DrawString("0", font, brush, centerX + 2, centerY + 2);
+                }
+            }
+        }
+
+        // Dibujar un píxel individual
+        private void DrawPixel(int x, int y, Color color)
+        {
+            using (Graphics g = Graphics.FromImage(mBitmap))
+            using (SolidBrush brush = new SolidBrush(color))
+            {
+                g.FillRectangle(brush, x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+                g.DrawRectangle(Pens.Black, x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+            }
+        }
+
+        // Mostrar información del algoritmo
+        private void DrawInfo(int step)
+        {
+            if (mLinePoints.Count == 0 || step >= mLinePoints.Count)
+                return;
+
+            Point current = mLinePoints[step];
+
+            using (Graphics g = Graphics.FromImage(mBitmap))
+            {
+                Font font = new Font("Arial", 9, FontStyle.Bold);
+                Font fontNormal = new Font("Arial", 8);
+                SolidBrush brush = new SolidBrush(Color.DarkBlue);
+                SolidBrush brushRed = new SolidBrush(Color.Red);
+
+                int x = 10;
+                int y = 10;
+                int lineHeight = 18;
+
+                // Fondo semi-transparente
+                using (SolidBrush bgBrush = new SolidBrush(Color.FromArgb(230, Color.White)))
+                {
+                    g.FillRectangle(bgBrush, 5, 5, 280, 140);
+                    g.DrawRectangle(Pens.Black, 5, 5, 280, 140);
+                }
+
+                g.DrawString("Algoritmo Punto Medio", font, brush, x, y);
+                y += lineHeight + 3;
+
+                g.DrawString($"Punto inicial: ({mXo}, {mYo})", fontNormal, brush, x, y);
+                y += lineHeight;
+
+                g.DrawString($"Punto final: ({mXf}, {mYf})", fontNormal, brush, x, y);
+                y += lineHeight + 3;
+
+                g.DrawString($"Δx: {DeltaX}", fontNormal, brush, x, y);
+                y += lineHeight;
+
+                g.DrawString($"Δy: {DeltaY}", fontNormal, brush, x, y);
+                y += lineHeight + 3;
+
+                g.DrawString($"Paso {step + 1}/{mLinePoints.Count}", font, brushRed, x, y);
+                y += lineHeight;
+
+                g.DrawString($"Punto actual: ({current.X}, {current.Y})", fontNormal, brushRed, x, y);
+
+                font.Dispose();
+                fontNormal.Dispose();
+                brush.Dispose();
+                brushRed.Dispose();
+            }
+        }
+
+        // Obtener información del punto actual
+        public string GetCurrentPointInfo()
+        {
+            if (mLinePoints.Count == 0 || mCurrentStep >= mLinePoints.Count)
+                return "Sin datos";
+
+            Point current = mLinePoints[mCurrentStep];
+            return $"Paso {mCurrentStep + 1}/{mLinePoints.Count} - Punto ({current.X}, {current.Y})";
+        }
+
+    }
+}
+
+
+

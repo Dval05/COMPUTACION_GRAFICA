@@ -1,0 +1,68 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    internal class CPuntoMedio
+    {
+        private int mXo;
+        private int mYo;
+        private int mXf;
+        private int mYf;
+        private Graphics mGraph;
+        private Pen mPen;
+        private const float SF = 10; // Factor de escalamiento
+
+        public CPuntoMedio()
+        {
+            mXo = 0; mYo = 0;
+            mXf = 0; mYf = 0;
+        }
+
+        public bool ReadData(TextBox txtXo, TextBox txtXf, TextBox txtYo, TextBox txtYf)
+        {
+            bool respuesta = true;
+            try
+            {
+                mXo = int.Parse(txtXo.Text);
+                mXf = int.Parse(txtXf.Text);
+                mYo = int.Parse(txtYo.Text);
+                mYf = int.Parse(txtYf.Text);
+                // Eliminada validación incorrecta que impedía valores negativos
+            }
+            catch
+            {
+                respuesta = false;
+                MessageBox.Show("Ingrese Datos válidos...!", "ERROR!");
+            }
+
+            return respuesta;
+        }
+
+        public void InitializeData(TextBox txtXo, TextBox txtXf, TextBox txtYo, TextBox txtYf, PictureBox picCanvas)
+        {
+            mXo = 0; mYo = 0;
+            mXf = 0; mYf = 0;
+
+            txtXo.Text = ""; txtYo.Text = "";
+            txtXf.Text = ""; txtYf.Text = "";
+
+            txtXo.Focus();
+            picCanvas.Refresh();
+        }
+        public void CloseForm(Form form)
+        {
+            form.Close();
+        }
+
+
+        
+
+    }
+}
+

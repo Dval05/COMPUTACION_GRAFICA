@@ -1,0 +1,71 @@
+﻿using System;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    public partial class frmLineas : Form
+    {
+        private string algoritmo;
+        // Instancia de la clase lógica que creamos antes
+        private CAlgoritmosLineas motor = new CAlgoritmosLineas();
+
+        public frmLineas(string alg)
+        {
+            InitializeComponent();
+            algoritmo = alg;
+            this.Text = "Algoritmo de Línea: " + algoritmo;
+            lblTitulo.Text = algoritmo;
+        }
+
+        private async void btnCalcular_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int x0 = int.Parse(txtXo.Text);
+                int y0 = int.Parse(txtYo.Text);
+                int x1 = int.Parse(txtXf.Text);
+                int y1 = int.Parse(txtYf.Text);
+
+                if (picCanvas.Image == null)
+                    picCanvas.Image = new Bitmap(picCanvas.Width, picCanvas.Height);
+
+                using (Graphics g = Graphics.FromImage(picCanvas.Image))
+                {
+                    g.Clear(Color.White);
+                    // Dibujar Ejes
+                    g.DrawLine(Pens.LightGray, picCanvas.Width / 2, 0, picCanvas.Width / 2, picCanvas.Height);
+                    g.DrawLine(Pens.LightGray, 0, picCanvas.Height / 2, picCanvas.Width, picCanvas.Height / 2);
+                }
+                picCanvas.Refresh();
+
+                switch (algoritmo)
+                {
+                    case "DDA":
+                        await motor.DibujarDDA(picCanvas, x0, y0, x1, y1);
+                        break;
+                    case "BRESENHAM":
+                        await motor.DibujarBresenham(picCanvas, x0, y0, x1, y1);
+                        break;
+                    case "PUNTOMEDIO":
+                        await motor.DibujarPuntoMedio(picCanvas, x0, y0, x1, y1);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error en los datos: " + ex.Message);
+            }
+        }
+
+        private void btnLimpiar_Click(object sender, EventArgs e)
+        {
+            txtXo.Clear(); txtYo.Clear(); txtXf.Clear(); txtYf.Clear();
+            if (picCanvas.Image != null)
+            {
+                using (Graphics g = Graphics.FromImage(picCanvas.Image)) g.Clear(Color.White);
+                picCanvas.Refresh();
+            }
+        }
+    }
+}

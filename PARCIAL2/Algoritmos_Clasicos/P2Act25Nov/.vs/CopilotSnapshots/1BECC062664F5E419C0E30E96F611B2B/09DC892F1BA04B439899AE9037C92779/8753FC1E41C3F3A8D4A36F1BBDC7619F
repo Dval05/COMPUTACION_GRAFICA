@@ -1,0 +1,408 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    internal class CCircunferencia2
+    {
+        private int mRadio;
+        private List<Point> mLinePoints;
+        private int mCurrentStep;
+        private Bitmap mBitmap;
+        private const int PIXEL_SIZE = 15; // Tamaño de cada píxel en la cuadrícula
+        private int canvasPixelRows = 0;
+        private int canvasPixelCols = 0;
+
+        public CCircunferencia2()
+        {
+            mRadio = 0;
+            mLinePoints = new List<Point>();
+            mCurrentStep = 0;
+        }
+
+        public bool ReadData(TextBox txtRadio, PictureBox picCanvas)
+        {
+            bool respuesta = true;
+            try
+            {
+                mRadio = int.Parse(txtRadio.Text);
+
+            }
+            catch
+            {
+                respuesta = false;
+                MessageBox.Show("Ingrese Datos válidos...!", "ERROR!");
+            }
+
+            return respuesta;
+        }
+
+        public void InitializeData(TextBox txtRadio, PictureBox picCanvas)
+        {
+            mRadio = 0;
+
+            txtRadio.Text = "";
+
+            mLinePoints.Clear();
+            mCurrentStep = 0;
+            picCanvas.Image = null;
+            picCanvas.Refresh();
+
+            txtRadio.Focus();
+        }
+        public void CloseForm(Form form)
+        {
+            form.Close();
+        }
+
+        private bool ValidarPuntos()
+        {
+            if (mRadio <= 0)
+            {
+                MessageBox.Show("El radio debe ser un numero positivo", "Advertencia");
+                return false;
+            }
+            return true;
+        }
+
+
+        public async void DibujarCircunferenciaAnimada(PictureBox picCanvas)
+        {
+            if (!ValidarPuntos())
+            {
+                return;
+            }
+
+            canvasPixelRows = picCanvas.Height / PIXEL_SIZE;
+            canvasPixelCols = picCanvas.Width / PIXEL_SIZE;
+
+            int maxX = canvasPixelCols / 2;
+            int minX = -maxX;
+            int maxY = canvasPixelRows / 2;
+            int minY = -maxY;
+
+            if (mRadio > maxX || mRadio > maxY)
+            {
+                MessageBox.Show("El radio es demasiado grande para el área de dibujo", "Advertencia");
+                return;
+            }
+
+            // Dibujar con animación
+            await AnimarDibujoCompleto(picCanvas);
+        }
+
+        private async Task AnimarDibujoCompleto(PictureBox picCanvas)
+        {
+            InicializarLienzo(picCanvas);
+            await AnimarDibujoPasoAPasoRecursivo(picCanvas, 0);
+        }
+
+        private async Task AnimarDibujoPasoAPasoRecursivo(PictureBox picCanvas, int i)
+        {
+            if (i >= mLinePoints.Count)
+            {
+                return;
+            }
+
+            mCurrentStep = i;
+            DibujarHastaPaso(picCanvas, i);
+            await Task.Delay(10);
+            await AnimarDibujoPasoAPasoRecursivo(picCanvas, i + 1);
+        }
+
+        private void InicializarLienzo(PictureBox picCanvas)
+        {
+            if (mBitmap == null || mBitmap.Width != picCanvas.Width || mBitmap.Height != picCanvas.Height)
+                mBitmap = new Bitmap(picCanvas.Width, picCanvas.Height);
+
+            using (Graphics g = Graphics.FromImage(mBitmap))
+            {
+                g.Clear(Color.White);
+                DibujarCuadricula(g, picCanvas.Width, picCanvas.Height);
+            }
+        }
+
+        private void PintarPixel(int x, int y, Color color)
+        {
+            using (Graphics g = Graphics.FromImage(mBitmap))
+            using (SolidBrush brush = new SolidBrush(color))
+            {
+                g.FillRectangle(brush, x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+
+                if (color == Color.Blue || color == Color.Red)
+                {
+                    using (Pen borderPen = new Pen(Color.Black, 1))
+                    {
+                        g.DrawRectangle(borderPen, x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE - 1, PIXEL_SIZE - 1);
+                    }
+                }
+            }
+        }
+
+        private void DibujarCuadricula(Graphics g, int width, int height)
+        {
+            using (Pen gridPen = new Pen(Color.LightGray, 1))
+            using (Pen axisPen = new Pen(Color.LightGray, 2))
+            {
+                // Líneas verticales
+                TrazarLineasVerticalesRecursivo(g, gridPen, 0, width, height);
+
+                // Líneas horizontales
+                TrazarLineasHorizontalesRecursivo(g, gridPen, 0, width, height);
+
+                // Dibujar ejes principales (X e Y) en el centro
+                int centerX = width / 2;
+                int centerY = height / 2;
+
+                g.DrawLine(axisPen, centerX, 0, centerX, height);
+
+                g.DrawLine(axisPen, 0, centerY, width, centerY);
+
+                // Etiquetas de origen (0,0)
+                using (Font font = new Font("Arial", 8))
+                using (SolidBrush brush = new SolidBrush(Color.Black))
+                {
+                    g.DrawString("0", font, brush, centerX + 2, centerY + 2);
+                }
+            }
+        }
+
+        private void TrazarLineasVerticalesRecursivo(Graphics g, Pen pen, int x, int width, int height)
+        {
+            if (x >= width)
+            {
+                return;
+            }
+
+            g.DrawLine(pen, x, 0, x, height);
+            TrazarLineasVerticalesRecursivo(g, pen, x + PIXEL_SIZE, width, height);
+        }
+
+        private void TrazarLineasHorizontalesRecursivo(Graphics g, Pen pen, int y, int width, int height)
+        {
+            if (y >= height)
+            {
+                return;
+            }
+
+            g.DrawLine(pen, 0, y, width, y);
+            TrazarLineasHorizontalesRecursivo(g, pen, y + PIXEL_SIZE, width, height);
+        }
+
+
+        private void DibujarHastaPaso(PictureBox picCanvas, int step)
+        {
+            InicializarLienzo(picCanvas);
+
+            // Centro del canvas
+            int centerX = canvasPixelCols / 2;
+            int centerY = canvasPixelRows / 2;
+
+            // 1. Pintar los puntos
+            PintarPuntosRecursivo(0, step, centerX, centerY);
+
+            picCanvas.Image = mBitmap;
+        }
+
+        private void PintarPuntosRecursivo(int i, int step, int centerX, int centerY)
+        {
+            if (i > Math.Min(step, mLinePoints.Count - 1))
+            {
+                return;
+            }
+
+            Point p = mLinePoints[i];
+            int screenX = centerX + p.X;
+            int screenY = centerY - p.Y;
+            Color pointColor = (i == step) ? Color.Red : Color.Blue;
+            PintarPixel(screenX, screenY, pointColor);
+
+            PintarPuntosRecursivo(i + 1, step, centerX, centerY);
+        }
+
+        private void CalcularPuntosCircunferencia()
+        {
+            mLinePoints.Clear();
+            // Método Algebraico Directo usando y = sqrt(r² - x²)
+            CalcularPuntosMetodoAlgebraicoRecursivo(0);
+        }
+
+        private void CalcularPuntosMetodoAlgebraicoRecursivo(int x)
+        {
+            // Caso base: cuando x supera el radio
+            if (x > mRadio)
+            {
+                return;
+            }
+
+            // Calcular y usando la ecuación y = sqrt(r² - x²)
+            double yDouble = Math.Sqrt(mRadio * mRadio - x * x);
+            int y = (int)Math.Round(yDouble);
+
+            // Agregar los 8 puntos simétricos
+            AgregarPuntosSimetricos(x, y);
+
+            // Llamada recursiva para el siguiente valor de x
+            CalcularPuntosMetodoAlgebraicoRecursivo(x + 1);
+        }
+
+        private void AgregarPuntosSimetricos(int x, int y)
+        {
+            // Agregar puntos en los 8 octantes de la circunferencia
+            if (x == 0 && y == 0)
+            {
+                mLinePoints.Add(new Point(0, 0));
+            }
+            else if (x == 0)
+            {
+                mLinePoints.Add(new Point(0, y));
+                mLinePoints.Add(new Point(0, -y));
+            }
+            else if (y == 0)
+            {
+                mLinePoints.Add(new Point(x, 0));
+                mLinePoints.Add(new Point(-x, 0));
+            }
+            else
+            {
+                mLinePoints.Add(new Point(x, y));
+                mLinePoints.Add(new Point(-x, y));
+                mLinePoints.Add(new Point(x, -y));
+                mLinePoints.Add(new Point(-x, -y));
+                mLinePoints.Add(new Point(y, x));
+                mLinePoints.Add(new Point(-y, x));
+                mLinePoints.Add(new Point(y, -x));
+                mLinePoints.Add(new Point(-y, -x));
+            }
+        }
+
+        public void DibujarCircunferencia(PictureBox picCanvas)
+        {
+            if (!ValidarPuntos())
+            {
+                return;
+            }
+            CalcularPuntosCircunferencia();
+            DibujarCircunferenciaAnimada(picCanvas);
+        }
+
+        // Obtener el bitmap actual para colorear
+        public Bitmap ObtenerBitmap()
+        {
+            return mBitmap;
+        }
+
+        public async Task ColorearCircunferencia(PictureBox picCanvas, Color color, CColorear2 colorear)
+        {
+            if (mBitmap == null)
+            {
+                MessageBox.Show("Primero debe dibujar una circunferencia", "Advertencia");
+                return;
+            }
+
+            picCanvas.Image = mBitmap;
+
+            colorear.Initialize(picCanvas);
+
+            colorear.SetPixelSize(PIXEL_SIZE);
+
+            colorear.ActualizarBitmap();
+
+            int centerX = picCanvas.Width / 2;
+            int centerY = picCanvas.Height / 2;
+
+            Point puntoBlanco = BuscarPuntoBlancoCerca(centerX, centerY);
+
+            if (puntoBlanco.X == -1)
+            {
+                MessageBox.Show("No se encontró un área blanca para colorear.\nIntente con un radio mayor.", "Advertencia");
+                return;
+            }
+
+            await colorear.IniciarFloodFill(puntoBlanco.X, puntoBlanco.Y, color);
+
+            mBitmap = colorear.ObtenerBitmap();
+
+            picCanvas.Image = mBitmap;
+            picCanvas.Refresh();
+        }
+
+        private Point BuscarPuntoBlancoCerca(int centerX, int centerY)
+        {
+            if (mBitmap == null)
+                return new Point(-1, -1);
+
+            Color blanco = Color.FromArgb(255, 255, 255, 255); // Blanco puro
+            int whiteArgb = blanco.ToArgb();
+
+            if (centerX >= 0 && centerX < mBitmap.Width &&
+                centerY >= 0 && centerY < mBitmap.Height)
+            {
+                Color centerColor = mBitmap.GetPixel(centerX, centerY);
+                if (centerColor.ToArgb() == whiteArgb)
+                {
+                    return new Point(centerX, centerY);
+                }
+            }
+
+            return BuscarPuntoBlancoCercaRecursive(centerX, centerY, 1, whiteArgb);
+        }
+
+        private Point BuscarPuntoBlancoCercaRecursive(int centerX, int centerY, int radio, int whiteArgb)
+        {
+            if (radio > 20)
+            {
+                return new Point(-1, -1);
+            }
+
+            Point result = BuscarEnCuadradoRecursive(centerX, centerY, radio, -radio, -radio, whiteArgb);
+            
+            if (result.X != -1)
+            {
+                return result;
+            }
+
+            return BuscarPuntoBlancoCercaRecursive(centerX, centerY, radio + 1, whiteArgb);
+        }
+
+        private Point BuscarEnCuadradoRecursive(int centerX, int centerY, int radio, int dx, int dy, int whiteArgb)
+        {
+            if (dx > radio)
+            {
+                return new Point(-1, -1);
+            }
+
+            if (dy > radio)
+            {
+                return BuscarEnCuadradoRecursive(centerX, centerY, radio, dx + 1, -radio, whiteArgb);
+            }
+
+            int x = centerX + dx;
+            int y = centerY + dy;
+
+            if (x >= 0 && x < mBitmap.Width && y >= 0 && y < mBitmap.Height)
+            {
+                Color pixelColor = mBitmap.GetPixel(x, y);
+
+                if (pixelColor.ToArgb() == whiteArgb)
+                {
+                    return new Point(x, y);
+                }
+            }
+
+            return BuscarEnCuadradoRecursive(centerX, centerY, radio, dx, dy + 1, whiteArgb);
+        }
+
+        // Obtener el bitmap desde CColorear
+        public Bitmap ObtenerBitmapColorear(CColorear2 colorear)
+        {
+            return colorear.ObtenerBitmap();
+        }
+    }
+}
+

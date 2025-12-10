@@ -1,0 +1,309 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    internal class CDDA
+    {
+        private int mXo; 
+        private int mYo;
+        private int mXf;
+        private int mYf;
+        private Graphics mGraph;
+        private Pen mPen;
+        private const float SF = 20; // Factor de escalamiento
+
+        public CDDA()
+        {
+            mXo = 0; mYo = 0;
+            mXf = 0; mYf = 0;
+        }
+
+        public bool ReadData(TextBox txtXo, TextBox txtXf, TextBox txtYo, TextBox txtYf)
+        {
+            bool respuesta = true;
+            try
+            {
+                mXo = int.Parse(txtXo.Text);
+                mXf = int.Parse(txtXf.Text);
+                mYo = int.Parse(txtYo.Text);
+                mYf = int.Parse(txtYf.Text);
+                // Eliminada validación incorrecta que impedía valores negativos
+            }
+            catch
+            {
+                respuesta = false;
+                MessageBox.Show("Ingrese Datos válidos...!", "ERROR!");
+            }
+
+            return respuesta;
+        }
+
+        public void InitializeData(TextBox txtXo, TextBox txtXf, TextBox txtYo, TextBox txtYf, PictureBox picCanvas)
+        {
+            mXo = 0; mYo = 0; 
+            mXf = 0; mYf = 0;
+
+            txtXo.Text = ""; txtYo.Text = "";
+            txtXf.Text = ""; txtYf.Text = "";
+
+            txtXo.Focus();
+            picCanvas.Refresh();
+        }
+
+        public void CloseForm(Form form)
+        {
+            form.Close();
+        }
+
+        // Método principal que ejecuta el algoritmo DDA
+        public void DrawDDA(PictureBox picCanvas)
+        {
+            if (!ValidarPuntos())
+            {
+                return;
+            }
+
+            InitializeGraphics(picCanvas);
+
+            // Centrar el origen correctamente
+            int centerX = picCanvas.Width / 2;
+            int centerY = picCanvas.Height / 2;
+
+            // Calcular pendiente y determinar método de incremento
+            float pendiente = CalcularPendiente(out bool usarIncrementoX);
+
+            // Obtener lista de puntos según el algoritmo DDA
+            List<Point> puntos = GenerarPuntosDDA(pendiente, usarIncrementoX, centerX, centerY);
+
+            // Dibujar ejes de coordenadas
+            DibujarEjes(picCanvas, centerX, centerY);
+
+            // Dibujar puntos iterativamente
+            DibujarPuntosIterativamente(puntos, picCanvas, centerX, centerY);
+
+            // Dibujar línea final
+            DibujarLineaFinal(centerX, centerY);
+        }
+
+        // Validar que los puntos no sean iguales
+        private bool ValidarPuntos()
+        {
+            if (mXo == mXf && mYo == mYf)
+            {
+                MessageBox.Show("Los puntos inicial y final son iguales", "Advertencia");
+                return false;
+            }
+            return true;
+        }
+
+        // Inicializar objetos gráficos
+        private void InitializeGraphics(PictureBox picCanvas)
+        {
+            mGraph = picCanvas.CreateGraphics();
+            mGraph.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            if (mPen == null)
+            {
+                mPen = new Pen(Color.Blue, 2);
+            }
+        }
+
+        // Calcular la pendiente m = (y2 - y1) / (x2 - x1)
+        // Determina si |m| <= 1 o |m| > 1
+        private float CalcularPendiente(out bool usarIncrementoX)
+        {
+            float dx = mXf - mXo;
+            float dy = mYf - mYo;
+            float m = 0;
+
+            if (dx == 0)
+            {
+                // Línea vertical, |m| > 1
+                usarIncrementoX = false;
+            }
+            else
+            {
+                m = dy / dx;
+                // Si |m| <= 1, incrementar x; si |m| > 1, incrementar y
+                usarIncrementoX = Math.Abs(m) <= 1;
+            }
+
+            return m;
+        }
+
+        // Generar lista de puntos usando el algoritmo DDA
+        private List<Point> GenerarPuntosDDA(float pendiente, bool usarIncrementoX, int centerX, int centerY)
+        {
+            List<Point> puntos = new List<Point>();
+
+            if (usarIncrementoX)
+            {
+                // Caso: |m| <= 1 - Incrementar x en 1
+                puntos = GenerarPuntosIncrementoX(pendiente, centerX, centerY);
+            }
+            else
+            {
+                // Caso: |m| > 1 - Incrementar y en 1
+                puntos = GenerarPuntosIncrementoY(pendiente, centerX, centerY);
+            }
+
+            return puntos;
+        }
+
+        // Generar puntos cuando |m| <= 1
+        // Fórmula: y_k+1 = redondear(y_k + m)
+        private List<Point> GenerarPuntosIncrementoX(float m, int centerX, int centerY)
+        {
+            List<Point> puntos = new List<Point>();
+
+            int xStart = mXo;
+            int xEnd = mXf;
+            float y = mYo;
+
+            // Asegurar que x vaya de menor a mayor
+            if (xStart > xEnd)
+            {
+                xStart = mXf;
+                xEnd = mXo;
+                y = mYf;
+                m = -m;
+            }
+
+            for (int x = xStart; x <= xEnd; x++)
+            {
+                int screenX = centerX + (int)(x * SF);
+                int screenY = centerY - (int)Math.Round(y * SF);
+
+                puntos.Add(new Point(screenX, screenY));
+
+                // y_k+1 = y_k + m
+                y = y + m;
+            }
+
+            return puntos;
+        }
+
+        // Generar puntos cuando |m| > 1
+        // Fórmula: x_k+1 = redondear(x_k + 1/m)
+        private List<Point> GenerarPuntosIncrementoY(float m, int centerX, int centerY)
+        {
+            List<Point> puntos = new List<Point>();
+
+            int yStart = mYo;
+            int yEnd = mYf;
+            float x = mXo;
+
+            float dx = mXf - mXo;
+            float dy = mYf - mYo;
+            float invM = (dy != 0) ? dx / dy : 0; // 1/m
+
+            // Asegurar que y vaya de menor a mayor
+            if (yStart > yEnd)
+            {
+                yStart = mYf;
+                yEnd = mYo;
+                x = mXf;
+                invM = -invM;
+            }
+
+            for (int y = yStart; y <= yEnd; y++)
+            {
+                int screenX = centerX + (int)Math.Round(x * SF);
+                int screenY = centerY - (int)(y * SF);
+
+                puntos.Add(new Point(screenX, screenY));
+
+                // x_k+1 = x_k + 1/m
+                x = x + invM;
+            }
+
+            return puntos;
+        }
+
+        // CORREGIDO: Dibujar puntos de forma iterativa (uno por uno)
+        private void DibujarPuntosIterativamente(List<Point> puntos, PictureBox picCanvas, int centerX, int centerY)
+        {
+            SolidBrush pointBrush = new SolidBrush(Color.Red);
+
+            for (int i = 0; i < puntos.Count; i++)
+            {
+                // Limpiar canvas
+                picCanvas.Refresh();
+                mGraph = picCanvas.CreateGraphics();
+                mGraph.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                // Redibujar ejes
+                DibujarEjes(picCanvas, centerX, centerY);
+
+                // Dibujar todos los puntos hasta el actual
+                for (int j = 0; j <= i; j++)
+                {
+                    Point p = puntos[j];
+                    mGraph.FillEllipse(pointBrush, p.X - 3, p.Y - 3, 6, 6);
+                }
+
+                // Pausa para visualización (opcional, comentar si es muy lento)
+                System.Threading.Thread.Sleep(30);
+                Application.DoEvents(); // IMPORTANTE: Permite que la UI se actualice
+            }
+
+            pointBrush.Dispose();
+        }
+
+        // Dibujar la línea final completa
+        private void DibujarLineaFinal(int centerX, int centerY)
+        {
+            int startScreenX = centerX + (int)(mXo * SF);
+            int startScreenY = centerY - (int)(mYo * SF);
+            int endScreenX = centerX + (int)(mXf * SF);
+            int endScreenY = centerY - (int)(mYf * SF);
+
+            Pen linePen = new Pen(Color.Green, 2);
+            mGraph.DrawLine(linePen, startScreenX, startScreenY, endScreenX, endScreenY);
+
+            linePen.Dispose();
+        }
+
+        // Dibujar ejes de coordenadas
+        private void DibujarEjes(PictureBox picCanvas, int centerX, int centerY)
+        {
+            Pen ejesPen = new Pen(Color.LightGray, 1);
+            Pen ejesPenPrincipal = new Pen(Color.Black, 2);
+
+            // Eje X (horizontal)
+            mGraph.DrawLine(ejesPenPrincipal, 0, centerY, picCanvas.Width, centerY);
+            
+            // Eje Y (vertical)
+            mGraph.DrawLine(ejesPenPrincipal, centerX, 0, centerX, picCanvas.Height);
+
+            // Marcas en el eje X
+            for (int i = -(int)(centerX / SF); i <= (int)(centerX / SF); i++)
+            {
+                int x = centerX + (int)(i * SF);
+                if (x >= 0 && x <= picCanvas.Width)
+                {
+                    mGraph.DrawLine(ejesPen, x, centerY - 3, x, centerY + 3);
+                }
+            }
+
+            // Marcas en el eje Y
+            for (int i = -(int)(centerY / SF); i <= (int)(centerY / SF); i++)
+            {
+                int y = centerY - (int)(i * SF);
+                if (y >= 0 && y <= picCanvas.Height)
+                {
+                    mGraph.DrawLine(ejesPen, centerX - 3, y, centerX + 3, y);
+                }
+            }
+
+            ejesPen.Dispose();
+            ejesPenPrincipal.Dispose();
+        }
+    }
+}

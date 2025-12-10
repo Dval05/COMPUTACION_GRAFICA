@@ -1,0 +1,284 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    internal class CBresenham
+    {
+
+        private int mXo;
+        private int mYo;
+        private int mXf;
+        private int mYf;
+        private Graphics mGraph;
+        private Pen mPen;
+        private const float SF = 10; // Factor de escalamiento
+
+        public CBresenham()
+        {
+            mXo = 0; mYo = 0;
+            mXf = 0; mYf = 0;
+        }
+
+        public bool ReadData(TextBox txtXo, TextBox txtXf, TextBox txtYo, TextBox txtYf)
+        {
+            bool respuesta = true;
+            try
+            {
+                mXo = int.Parse(txtXo.Text);
+                mXf = int.Parse(txtXf.Text);
+                mYo = int.Parse(txtYo.Text);
+                mYf = int.Parse(txtYf.Text);
+                // Eliminada validación incorrecta que impedía valores negativos
+            }
+            catch
+            {
+                respuesta = false;
+                MessageBox.Show("Ingrese Datos válidos...!", "ERROR!");
+            }
+
+            return respuesta;
+        }
+
+        public void InitializeData(TextBox txtXo, TextBox txtXf, TextBox txtYo, TextBox txtYf, PictureBox picCanvas)
+        {
+            mXo = 0; mYo = 0;
+            mXf = 0; mYf = 0;
+
+            txtXo.Text = ""; txtYo.Text = "";
+            txtXf.Text = ""; txtYf.Text = "";
+
+            txtXo.Focus();
+            picCanvas.Refresh();
+        }
+        public void CloseForm(Form form)
+        {
+            form.Close();
+        }
+
+        // Método principal que ejecuta el algoritmo de Bresenham
+        public void DrawBresenham(PictureBox picCanvas)
+        {
+            if (!ValidarPuntos())
+            {
+                return;
+            }
+
+            InitializeGraphics(picCanvas);
+
+            // Centrar el origen 
+            int centerX = picCanvas.Width / 2;
+            int centerY = picCanvas.Height / 2;
+
+            // Obtener lista de puntos según el algoritmo de Bresenham
+            List<Point> puntos = GenerarPuntosBresenham(centerX, centerY);
+
+            // Dibujar ejes de coordenadas
+            DibujarEjes(picCanvas, centerX, centerY);
+
+            // Dibujar puntos iterativamente
+            DibujarPuntosIterativamente(puntos, picCanvas, centerX, centerY);
+
+            // Dibujar línea final
+            DibujarLineaFinal(centerX, centerY);
+        }
+
+        // Validar que los puntos no sean iguales
+        private bool ValidarPuntos()
+        {
+            if (mXo == mXf && mYo == mYf)
+            {
+                MessageBox.Show("Los puntos inicial y final son iguales", "Advertencia");
+                return false;
+            }
+            return true;
+        }
+
+        // Inicializar objetos gráficos
+        private void InitializeGraphics(PictureBox picCanvas)
+        {
+            mGraph = picCanvas.CreateGraphics();
+            mGraph.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            if (mPen == null)
+            {
+                mPen = new Pen(Color.Blue, 2);
+            }
+        }
+
+        // Algoritmo de Bresenham
+        // Fórmulas: p₀ = 2Δy - Δx
+        //           si p_k < 0: p_{k+1} = p_k + 2Δy
+        //           si p_k >= 0: p_{k+1} = p_k + 2Δy - 2Δx
+        private List<Point> GenerarPuntosBresenham(int centerX, int centerY)
+        {
+            List<Point> puntos = new List<Point>();
+
+            // Calcular diferencias
+            int dx = Math.Abs(mXf - mXo);
+            int dy = Math.Abs(mYf - mYo);
+
+            // Determinar dirección de incremento
+            int sx = mXo < mXf ? 1 : -1;
+            int sy = mYo < mYf ? 1 : -1;
+
+            int x = mXo;
+            int y = mYo;
+
+            // Determinar si la pendiente es suave (dx > dy) o pronunciada (dy > dx)
+            if (dx > dy)
+            {
+                // Caso: pendiente suave (|m| <= 1)
+                // p₀ = 2Δy - Δx
+                int p = 2 * dy - dx;
+                int twoDy = 2 * dy;
+                int twoDyMinusDx = 2 * (dy - dx);
+
+                for (int i = 0; i <= dx; i++)
+                {
+                    // Convertir a coordenadas de pantalla
+                    int screenX = centerX + (int)(x * SF);
+                    int screenY = centerY - (int)(y * SF);
+                    puntos.Add(new Point(screenX, screenY));
+
+                    // Avanzar en X
+                    x += sx;
+
+                    // Actualizar parámetro de decisión
+                    if (p < 0)
+                    {
+                        // p_{k+1} = p_k + 2Δy
+                        p += twoDy;
+                    }
+                    else
+                    {
+                        // p_{k+1} = p_k + 2Δy - 2Δx
+                        p += twoDyMinusDx;
+                        y += sy;
+                    }
+                }
+            }
+            else
+            {
+                // Caso: pendiente pronunciada (|m| > 1)
+                // Intercambiar roles de x e y
+                // p₀ = 2Δx - Δy
+                int p = 2 * dx - dy;
+                int twoDx = 2 * dx;
+                int twoDxMinusDy = 2 * (dx - dy);
+
+                for (int i = 0; i <= dy; i++)
+                {
+                    // Convertir a coordenadas de pantalla
+                    int screenX = centerX + (int)(x * SF);
+                    int screenY = centerY - (int)(y * SF);
+                    puntos.Add(new Point(screenX, screenY));
+
+                    // Avanzar en Y
+                    y += sy;
+
+                    // Actualizar parámetro de decisión
+                    if (p < 0)
+                    {
+                        // p_{k+1} = p_k + 2Δx
+                        p += twoDx;
+                    }
+                    else
+                    {
+                        // p_{k+1} = p_k + 2Δx - 2Δy
+                        p += twoDxMinusDy;
+                        x += sx;
+                    }
+                }
+            }
+
+            return puntos;
+        }
+
+        // Dibujar puntos de forma iterativa (uno por uno)
+        private void DibujarPuntosIterativamente(List<Point> puntos, PictureBox picCanvas, int centerX, int centerY)
+        {
+            SolidBrush pointBrush = new SolidBrush(Color.Red);
+
+            for (int i = 0; i < puntos.Count; i++)
+            {
+                // Limpiar canvas
+                picCanvas.Refresh();
+                mGraph = picCanvas.CreateGraphics();
+                mGraph.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                // Redibujar ejes
+                DibujarEjes(picCanvas, centerX, centerY);
+
+                // Dibujar todos los puntos hasta el actual
+                for (int j = 0; j <= i; j++)
+                {
+                    Point p = puntos[j];
+                    mGraph.FillEllipse(pointBrush, p.X - 3, p.Y - 3, 6, 6);
+                }
+
+                // Pausa para visualización
+                System.Threading.Thread.Sleep(30);
+                Application.DoEvents();
+            }
+
+            pointBrush.Dispose();
+        }
+
+        // Dibujar la línea final completa
+        private void DibujarLineaFinal(int centerX, int centerY)
+        {
+            int startScreenX = centerX + (int)(mXo * SF);
+            int startScreenY = centerY - (int)(mYo * SF);
+            int endScreenX = centerX + (int)(mXf * SF);
+            int endScreenY = centerY - (int)(mYf * SF);
+
+            Pen linePen = new Pen(Color.Green, 2);
+            mGraph.DrawLine(linePen, startScreenX, startScreenY, endScreenX, endScreenY);
+
+            linePen.Dispose();
+        }
+
+        // Dibujar ejes de coordenadas
+        private void DibujarEjes(PictureBox picCanvas, int centerX, int centerY)
+        {
+            Pen ejesPen = new Pen(Color.LightGray, 1);
+            Pen ejesPenPrincipal = new Pen(Color.Black, 2);
+
+            // Eje X (horizontal)
+            mGraph.DrawLine(ejesPenPrincipal, 0, centerY, picCanvas.Width, centerY);
+
+            // Eje Y (vertical)
+            mGraph.DrawLine(ejesPenPrincipal, centerX, 0, centerX, picCanvas.Height);
+
+            // Marcas en el eje X
+            for (int i = -(int)(centerX / SF); i <= (int)(centerX / SF); i++)
+            {
+                int x = centerX + (int)(i * SF);
+                if (x >= 0 && x <= picCanvas.Width)
+                {
+                    mGraph.DrawLine(ejesPen, x, centerY - 3, x, centerY + 3);
+                }
+            }
+
+            // Marcas en el eje Y
+            for (int i = -(int)(centerY / SF); i <= (int)(centerY / SF); i++)
+            {
+                int y = centerY - (int)(i * SF);
+                if (y >= 0 && y <= picCanvas.Height)
+                {
+                    mGraph.DrawLine(ejesPen, centerX - 3, y, centerX + 3, y);
+                }
+            }
+
+            ejesPen.Dispose();
+            ejesPenPrincipal.Dispose();
+        }
+
+    }
+}

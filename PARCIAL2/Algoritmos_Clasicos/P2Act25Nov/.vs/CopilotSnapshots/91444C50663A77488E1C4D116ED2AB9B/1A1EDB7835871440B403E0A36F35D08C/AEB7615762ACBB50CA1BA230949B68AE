@@ -1,0 +1,67 @@
+﻿using System;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    public partial class frmCircunferencia2 : Form
+    {
+        CCircunferencia2 objCircunferencia = new CCircunferencia2();
+        CColorear2 objColorear = new CColorear2(); // Usar CColorear2 (ITERATIVO)
+
+        public frmCircunferencia2()
+        {
+            InitializeComponent();
+        }
+
+
+
+        private void btnCalcular_Click(object sender, EventArgs e)
+        {
+            if (objCircunferencia.ReadData(txtRadio, picCanvas))
+            {
+                objCircunferencia.DibujarCircunferencia(picCanvas);
+            }
+        }
+
+        private void btnResetear_Click(object sender, EventArgs e)
+        {
+            objCircunferencia.InitializeData(txtRadio, picCanvas);
+            objColorear = new CColorear2(); 
+        }
+
+        private void btnSalir_Click(object sender, EventArgs e)
+        {
+            objCircunferencia.CloseForm(this);
+        }
+
+        private async void btnColorear_Click(object sender, EventArgs e)
+        {
+            if (picCanvas.Image == null)
+            {
+                MessageBox.Show("Primero debe dibujar una circunferencia", "Advertencia");
+                return;
+            }
+
+            // Mostrar diálogo de color
+            ColorDialog colorDialog = new ColorDialog();
+            colorDialog.Color = Color.Green; // Color predeterminado
+
+            if (colorDialog.ShowDialog() == DialogResult.OK)
+            {
+                await objCircunferencia.ColorearCircunferencia(picCanvas, colorDialog.Color, objColorear);
+            }
+        }
+
+    }
+
+}
+
+

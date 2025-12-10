@@ -1,0 +1,59 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    public partial class frmCircunferencia3 : Form
+    {
+        CCircunferencia3 objCircunferencia = new CCircunferencia3();
+        CColorear3 objColorear = new CColorear3(); // Usar CColorear3 (Scanline Flood Fill)
+
+        public frmCircunferencia3()
+        {
+            InitializeComponent();
+        }
+
+        private void btnCalcular_Click(object sender, EventArgs e)
+        {
+            if (objCircunferencia.ReadData(txtRadio, picCanvas))
+            {
+                objCircunferencia.TrazarCircunferenciaParametrica(picCanvas);
+            }
+        }
+
+        private void btnResetear_Click(object sender, EventArgs e)
+        {
+            objCircunferencia.InitializeData(txtRadio, picCanvas);
+            objColorear = new CColorear3();
+        }
+
+        private void btnSalir_Click(object sender, EventArgs e)
+        {
+            objCircunferencia.CloseForm(this);
+        }
+
+        private async void btnColorear_Click(object sender, EventArgs e)
+        {
+            if (picCanvas.Image == null)
+            {
+                return;
+            }
+
+            // Mostrar diálogo de color
+            ColorDialog colorDialog = new ColorDialog();
+            colorDialog.Color = Color.Purple; // Color predeterminado
+
+            if (colorDialog.ShowDialog() == DialogResult.OK)
+            {
+                await objCircunferencia.ColorearCircunferencia(picCanvas, colorDialog.Color, objColorear);
+            }
+        }
+    }
+}

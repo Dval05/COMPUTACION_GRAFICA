@@ -1,0 +1,225 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    internal class CCohenSutherland
+    {
+        private const int INSIDE = 0;
+        private const int LEFT = 1;
+        private const int RIGHT = 2;
+        private const int BOTTOM = 4;
+        private const int TOP = 8;
+
+        private int xMin, yMin, xMax, yMax;
+        private Bitmap mBitmap;
+        private PictureBox mPictureBox;
+        private List<Tuple<Point, Point>> lineasOriginales;
+        private List<Tuple<Point, Point>> lineasRecortadas;
+
+        public CCohenSutherland()
+        {
+            lineasOriginales = new List<Tuple<Point, Point>>();
+            lineasRecortadas = new List<Tuple<Point, Point>>();
+        }
+
+        public void Initialize(PictureBox picCanvas)
+        {
+            mPictureBox = picCanvas;
+
+            if (mPictureBox.Image != null)
+            {
+                mBitmap = new Bitmap(mPictureBox.Image);
+            }
+            else
+            {
+                mBitmap = new Bitmap(mPictureBox.Width, mPictureBox.Height);
+                using (Graphics g = Graphics.FromImage(mBitmap))
+                {
+                    g.Clear(Color.White);
+                }
+                mPictureBox.Image = mBitmap;
+            }
+
+            xMin = 0;
+            yMin = 0;
+            xMax = mPictureBox.Width;
+            yMax = mPictureBox.Height;
+        }
+
+        public void SetVentanaRecorte(int x1, int y1, int x2, int y2)
+        {
+            xMin = Math.Min(x1, x2);
+            yMin = Math.Min(y1, y2);
+            xMax = Math.Max(x1, x2);
+            yMax = Math.Max(y1, y2);
+        }
+
+        private int ComputeOutCode(double x, double y)
+        {
+            int code = INSIDE;
+
+            if (x < xMin)
+                code |= LEFT;
+            else if (x > xMax)
+                code |= RIGHT;
+
+            if (y < yMin)
+                code |= TOP;
+            else if (y > yMax)
+                code |= BOTTOM;
+
+            return code;
+        }
+
+        public bool RecortarLinea(ref double x1, ref double y1, ref double x2, ref double y2)
+        {
+            int outcode1 = ComputeOutCode(x1, y1);
+            int outcode2 = ComputeOutCode(x2, y2);
+            bool accept = false;
+
+            while (true)
+            {
+                if ((outcode1 | outcode2) == 0)
+                {
+                    accept = true;
+                    break;
+                }
+                else if ((outcode1 & outcode2) != 0)
+                {
+                    break;
+                }
+                else
+                {
+                    double x = 0, y = 0;
+                    int outcodeOut = outcode1 != 0 ? outcode1 : outcode2;
+
+                    if ((outcodeOut & TOP) != 0)
+                    {
+                        x = x1 + (x2 - x1) * (yMin - y1) / (y2 - y1);
+                        y = yMin;
+                    }
+                    else if ((outcodeOut & BOTTOM) != 0)
+                    {
+                        x = x1 + (x2 - x1) * (yMax - y1) / (y2 - y1);
+                        y = yMax;
+                    }
+                    else if ((outcodeOut & RIGHT) != 0)
+                    {
+                        y = y1 + (y2 - y1) * (xMax - x1) / (x2 - x1);
+                        x = xMax;
+                    }
+                    else if ((outcodeOut & LEFT) != 0)
+                    {
+                        y = y1 + (y2 - y1) * (xMin - x1) / (x2 - x1);
+                        x = xMin;
+                    }
+
+                    if (outcodeOut == outcode1)
+                    {
+                        x1 = x;
+                        y1 = y;
+                        outcode1 = ComputeOutCode(x1, y1);
+                    }
+                    else
+                    {
+                        x2 = x;
+                        y2 = y;
+                        outcode2 = ComputeOutCode(x2, y2);
+                    }
+                }
+            }
+
+            return accept;
+        }
+
+        public void AgregarLinea(Point p1, Point p2)
+        {
+            lineasOriginales.Add(new Tuple<Point, Point>(p1, p2));
+        }
+
+        public void AplicarRecorte()
+        {
+            lineasRecortadas.Clear();
+
+            foreach (var linea in lineasOriginales)
+            {
+                double x1 = linea.Item1.X;
+                double y1 = linea.Item1.Y;
+                double x2 = linea.Item2.X;
+                double y2 = linea.Item2.Y;
+
+                if (RecortarLinea(ref x1, ref y1, ref x2, ref y2))
+                {
+                    Point p1 = new Point((int)x1, (int)y1);
+                    Point p2 = new Point((int)x2, (int)y2);
+                    lineasRecortadas.Add(new Tuple<Point, Point>(p1, p2));
+                }
+            }
+        }
+
+        public void DibujarVentanaRecorte(Color color)
+        {
+            using (Graphics g = Graphics.FromImage(mBitmap))
+            {
+                using (Pen pen = new Pen(color, 2))
+                {
+                    pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+                    g.DrawRectangle(pen, xMin, yMin, xMax - xMin, yMax - yMin);
+                }
+            }
+            mPictureBox.Image = mBitmap;
+            mPictureBox.Refresh();
+        }
+
+        public void DibujarLineasRecortadas(Color color, int grosor)
+        {
+            using (Graphics g = Graphics.FromImage(mBitmap))
+            {
+                g.Clear(Color.White);
+
+                using (Pen penVentana = new Pen(Color.Red, 2))
+                {
+                    penVentana.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+                    g.DrawRectangle(penVentana, xMin, yMin, xMax - xMin, yMax - yMin);
+                }
+
+                using (Pen penLinea = new Pen(color, grosor))
+                {
+                    foreach (var linea in lineasRecortadas)
+                    {
+                        g.DrawLine(penLinea, linea.Item1, linea.Item2);
+                    }
+                }
+            }
+            mPictureBox.Image = mBitmap;
+            mPictureBox.Refresh();
+        }
+
+        public void Limpiar()
+        {
+            lineasOriginales.Clear();
+            lineasRecortadas.Clear();
+
+            using (Graphics g = Graphics.FromImage(mBitmap))
+            {
+                g.Clear(Color.White);
+            }
+            mPictureBox.Image = mBitmap;
+            mPictureBox.Refresh();
+        }
+
+        public int GetXMin() { return xMin; }
+        public int GetYMin() { return yMin; }
+        public int GetXMax() { return xMax; }
+        public int GetYMax() { return yMax; }
+
+        public int GetCantidadLineasOriginales() { return lineasOriginales.Count; }
+        public int GetCantidadLineasRecortadas() { return lineasRecortadas.Count; }
+    }
+}

@@ -1,0 +1,350 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    internal class CCircunferencia
+    {
+        private int mRadio;
+        private List<Point> mLinePoints;
+        private int mCurrentStep;
+        private Bitmap mBitmap;
+        private const int PIXEL_SIZE = 10; // Tamaño de cada píxel en la cuadrícula
+        private int canvasPixelRows = 0;
+        private int canvasPixelCols = 0;
+
+        public CCircunferencia()
+        {
+            mRadio = 0;
+            mLinePoints = new List<Point>();
+            mCurrentStep = 0;
+        }
+
+        public bool ReadData(TextBox txtRadio, PictureBox picCanvas)
+        {
+            bool respuesta = true;
+            try
+            {
+                mRadio = int.Parse(txtRadio.Text);
+
+            }
+            catch
+            {
+                respuesta = false;
+                MessageBox.Show("Ingrese Datos válidos...!", "ERROR!");
+            }
+
+            return respuesta;
+        }
+
+        public void InitializeData(TextBox txtRadio, PictureBox picCanvas)
+        {
+            mRadio = 0;
+
+            txtRadio.Text = "";
+
+            mLinePoints.Clear();
+            mCurrentStep = 0;
+            picCanvas.Image = null;
+            picCanvas.Refresh();
+
+            txtRadio.Focus();
+        }
+        public void CloseForm(Form form)
+        {
+            form.Close();
+        }
+
+        private bool ValidarPuntos()
+        {
+            if (mRadio <= 0)
+            {
+                MessageBox.Show("El radio debe ser un numero positivo", "Advertencia");
+                return false;
+            }
+            return true;
+        }
+
+
+        public async void DrawPuntoMedio(PictureBox picCanvas)
+        {
+            if (!ValidarPuntos())
+            {
+                return;
+            }
+
+            // Calcular dimensiones en píxeles
+            canvasPixelRows = picCanvas.Height / PIXEL_SIZE;
+            canvasPixelCols = picCanvas.Width / PIXEL_SIZE;
+
+            // Calcular límites con origen centrado
+            int maxX = canvasPixelCols / 2;
+            int minX = -maxX;
+            int maxY = canvasPixelRows / 2;
+            int minY = -maxY;
+
+            if (mRadio > maxX || mRadio > maxY)
+            {
+                MessageBox.Show("El radio es demasiado grande para el área de dibujo" , "Advertencia");
+                return;
+            }
+
+            // Dibujar con animación
+            await DrawCompleteAnimated(picCanvas);
+        }
+
+        private async Task DrawCompleteAnimated(PictureBox picCanvas)
+        {
+            InitializeCanvas(picCanvas);
+
+            for (int i = 0; i < mLinePoints.Count; i++)
+            {
+                mCurrentStep = i;
+                DrawUpToStep(picCanvas, i);
+                await Task.Delay(10);
+            }
+        }
+
+        private void InitializeCanvas(PictureBox picCanvas)
+        {
+            if (mBitmap == null || mBitmap.Width != picCanvas.Width || mBitmap.Height != picCanvas.Height)
+                mBitmap = new Bitmap(picCanvas.Width, picCanvas.Height);
+
+            using (Graphics g = Graphics.FromImage(mBitmap))
+            {
+                g.Clear(Color.White);
+                DrawGrid(g, picCanvas.Width, picCanvas.Height);
+            }
+        }
+
+        private void DrawPixel(int x, int y, Color color)
+        {
+            using (Graphics g = Graphics.FromImage(mBitmap))
+            using (SolidBrush brush = new SolidBrush(color))
+            {
+                // Rellenar el píxel con el color
+                g.FillRectangle(brush, x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
+                
+                // Dibujar solo un borde delgado para los puntos de la circunferencia
+                if (color == Color.Blue || color == Color.Red)
+                {
+                    using (Pen borderPen = new Pen(Color.Black, 1))
+                    {
+                        g.DrawRectangle(borderPen, x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE - 1, PIXEL_SIZE - 1);
+                    }
+                }
+            }
+        }
+
+        private void DrawGrid(Graphics g, int width, int height)
+        {
+            using (Pen gridPen = new Pen(Color.LightGray, 1))
+            using (Pen axisPen = new Pen(Color.Black, 2))
+            {
+                // Líneas verticales
+                for (int x = 0; x < width; x += PIXEL_SIZE)
+                {
+                    g.DrawLine(gridPen, x, 0, x, height);
+                }
+
+                // Líneas horizontales
+                for (int y = 0; y < height; y += PIXEL_SIZE)
+                {
+                    g.DrawLine(gridPen, 0, y, width, y);
+                }
+
+                // Dibujar ejes principales (X e Y) en el centro
+                int centerX = width / 2;
+                int centerY = height / 2;
+
+                // Eje Y (vertical) en el centro
+                g.DrawLine(axisPen, centerX, 0, centerX, height);
+
+                // Eje X (horizontal) en el centro
+                g.DrawLine(axisPen, 0, centerY, width, centerY);
+
+                // Etiquetas de origen (0,0)
+                using (Font font = new Font("Arial", 8))
+                using (SolidBrush brush = new SolidBrush(Color.Black))
+                {
+                    g.DrawString("0", font, brush, centerX + 2, centerY + 2);
+                }
+            }
+        }
+
+
+        private void DrawUpToStep(PictureBox picCanvas, int step)
+        {
+            InitializeCanvas(picCanvas);
+
+            // Centro del canvas
+            int centerX = canvasPixelCols / 2;
+            int centerY = canvasPixelRows / 2;
+
+            // 1. Pintar los puntos 
+            for (int i = 0; i <= Math.Min(step, mLinePoints.Count - 1); i++)
+            {
+                Point p = mLinePoints[i];
+                
+                int screenX = centerX + p.X;
+                int screenY = centerY - p.Y;
+                Color pointColor = (i == step) ? Color.Red : Color.Blue;
+                DrawPixel(screenX, screenY, pointColor);
+            }
+
+            picCanvas.Image = mBitmap;
+        }
+
+        private void CalculateCircunferencePoints()
+        {
+            mLinePoints.Clear();
+            int x = 0;
+            int y = mRadio;
+            int d = 1 - mRadio;
+            AddCirclePoints(x, y);
+            while (x < y)
+            {
+                if (d < 0)
+                {
+                    d += 2 * x + 3;
+                }
+                else
+                {
+                    d += 2 * (x - y) + 5;
+                    y--;
+                }
+                x++;
+                AddCirclePoints(x, y);
+            }
+        }
+
+        private void AddCirclePoints(int x, int y)
+        {
+            mLinePoints.Add(new Point(x, y));
+            mLinePoints.Add(new Point(y, x));
+            mLinePoints.Add(new Point(-x, y));
+            mLinePoints.Add(new Point(-y, x));
+            mLinePoints.Add(new Point(x, -y));
+            mLinePoints.Add(new Point(y, -x));
+            mLinePoints.Add(new Point(-x, -y));
+            mLinePoints.Add(new Point(-y, -x));
+        }
+
+        public void DrawCircunference(PictureBox picCanvas)
+        {
+            if (!ValidarPuntos())
+            {
+                return;
+            }
+            // Calcular los puntos de la circunferencia
+            CalculateCircunferencePoints();
+            // Dibujar con animación
+            DrawPuntoMedio(picCanvas);
+        }
+
+        // Obtener el bitmap actual para colorear
+        public Bitmap ObtenerBitmap()
+        {
+            return mBitmap;
+        }
+
+        // Método para colorear la circunferencia desde el centro usando FloodFill recursivo
+        public void ColorearCircunferencia(PictureBox picCanvas, Color color, CColorear colorear)
+        {
+            if (mBitmap == null)
+            {
+                MessageBox.Show("Primero debe dibujar una circunferencia", "Advertencia");
+                return;
+            }
+
+            // NO limpiar las líneas de cuadrícula - mantenerlas visibles
+            // El FloodFill ahora sabe ignorar las líneas grises automáticamente
+
+            // Asegurarse de que el bitmap en colorear sea el mismo que el de la circunferencia
+            picCanvas.Image = mBitmap;
+            
+            // Inicializar el colorear con el PictureBox que tiene la imagen actual
+            colorear.Initialize(picCanvas);
+            
+            // Actualizar el bitmap en el colorear para que tome la imagen actual
+            colorear.ActualizarBitmap();
+
+            // Obtener el centro del canvas (donde está el centro de la circunferencia)
+            // El centro en píxeles de pantalla (no en coordenadas lógicas)
+            int centerX = picCanvas.Width / 2;
+            int centerY = picCanvas.Height / 2;
+
+            // Colorear desde el centro usando FloodFill recursivo
+            // El algoritmo ahora ignora automáticamente las líneas grises y negras
+            colorear.IniciarFloodFill(centerX, centerY, color);
+            
+            // Actualizar el bitmap de la circunferencia con el resultado coloreado
+            mBitmap = colorear.ObtenerBitmap();
+            
+            // Actualizar la imagen en el PictureBox
+            picCanvas.Image = mBitmap;
+            picCanvas.Refresh();
+        }
+
+        // Método para limpiar las líneas de cuadrícula manteniendo solo la circunferencia
+        private void LimpiarLineasCuadricula()
+        {
+            if (mBitmap == null) return;
+
+            // Crear un nuevo bitmap limpio
+            Bitmap bitmapLimpio = new Bitmap(mBitmap.Width, mBitmap.Height);
+            
+            using (Graphics g = Graphics.FromImage(bitmapLimpio))
+            {
+                // Fondo blanco
+                g.Clear(Color.White);
+            }
+
+            // Copiar solo los píxeles de la circunferencia (azules y rojos)
+            for (int y = 0; y < mBitmap.Height; y++)
+            {
+                for (int x = 0; x < mBitmap.Width; x++)
+                {
+                    Color pixel = mBitmap.GetPixel(x, y);
+                    
+                    // Solo copiar píxeles que sean de la circunferencia (azul o rojo)
+                    if (pixel.ToArgb() == Color.Blue.ToArgb() || pixel.ToArgb() == Color.Red.ToArgb())
+                    {
+                        bitmapLimpio.SetPixel(x, y, pixel);
+                    }
+                }
+            }
+
+            // Redibujar los ejes principales sin la cuadrícula
+            using (Graphics g = Graphics.FromImage(bitmapLimpio))
+            {
+                using (Pen axisPen = new Pen(Color.Black, 2))
+                {
+                    int centerX = mBitmap.Width / 2;
+                    int centerY = mBitmap.Height / 2;
+
+                    // Eje Y (vertical)
+                    g.DrawLine(axisPen, centerX, 0, centerX, mBitmap.Height);
+
+                    // Eje X (horizontal)
+                    g.DrawLine(axisPen, 0, centerY, mBitmap.Width, centerY);
+                }
+            }
+
+            // Reemplazar el bitmap con el limpio
+            mBitmap = bitmapLimpio;
+        }
+
+        // Obtener el bitmap desde CColorear
+        public Bitmap ObtenerBitmapColorear(CColorear colorear)
+        {
+            return colorear.ObtenerBitmap();
+        }
+    }
+}
+

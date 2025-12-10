@@ -1,0 +1,293 @@
+﻿using System;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    internal class CColorear3
+    {
+        private Bitmap mBitmap;
+        private int mPixelSize = 10; // Tamaño de cada píxel en la cuadrícula (configurable)
+        private int canvasPixelRows = 0;
+        private int canvasPixelCols = 0;
+        private Color targetColor; // Color objetivo a reemplazar
+        private PictureBox mPictureBox; // Referencia al PictureBox
+
+        public CColorear3()
+        {
+            mBitmap = null;
+            mPictureBox = null;
+        }
+
+        public void Initialize(PictureBox picCanvas)
+        {
+            mPictureBox = picCanvas;
+
+            if (mPictureBox.Image != null)
+            {
+                mBitmap = new Bitmap(mPictureBox.Image);
+            }
+            else
+            {
+                mBitmap = new Bitmap(mPictureBox.Width, mPictureBox.Height);
+                using (Graphics g = Graphics.FromImage(mBitmap))
+                {
+                    g.Clear(Color.White);
+                }
+                mPictureBox.Image = mBitmap;
+            }
+
+            canvasPixelRows = mBitmap.Height;
+            canvasPixelCols = mBitmap.Width;
+        }
+
+        public void SetPixelSize(int pixelSize)
+        {
+            mPixelSize = pixelSize;
+        }
+
+        public void ActualizarBitmap()
+        {
+            if (mPictureBox != null && mPictureBox.Image != null)
+            {
+                mBitmap = new Bitmap(mPictureBox.Image);
+                canvasPixelRows = mBitmap.Height;
+                canvasPixelCols = mBitmap.Width;
+            }
+        }
+
+        private void PintarCuadrado(int gridX, int gridY, Color color)
+        {
+            using (Graphics g = Graphics.FromImage(mBitmap))
+            using (SolidBrush brush = new SolidBrush(color))
+            {
+                g.FillRectangle(brush, gridX * mPixelSize, gridY * mPixelSize, mPixelSize, mPixelSize);
+            }
+        }
+
+        private bool EsCuadradoDelColorObjetivo(int gridX, int gridY)
+        {
+            int pixelX = gridX * mPixelSize + mPixelSize / 2;
+            int pixelY = gridY * mPixelSize + mPixelSize / 2;
+
+            if (pixelX < 0 || pixelX >= mBitmap.Width || pixelY < 0 || pixelY >= mBitmap.Height)
+                return false;
+
+            Color pixelColor = mBitmap.GetPixel(pixelX, pixelY);
+            return pixelColor.ToArgb() == targetColor.ToArgb();
+        }
+
+        private bool EsCuadradoBorde(int gridX, int gridY)
+        {
+            int pixelX = gridX * mPixelSize + mPixelSize / 2;
+            int pixelY = gridY * mPixelSize + mPixelSize / 2;
+
+            if (pixelX < 0 || pixelX >= mBitmap.Width || pixelY < 0 || pixelY >= mBitmap.Height)
+                return true;
+
+            Color pixelColor = mBitmap.GetPixel(pixelX, pixelY);
+            int argb = pixelColor.ToArgb();
+
+            return argb == Color.Blue.ToArgb() ||
+                   argb == Color.Red.ToArgb() ||
+                   argb == Color.Black.ToArgb();
+        }
+
+        // Algoritmo Scanline Flood Fill
+        private async Task ScanlineFillRecursivo(int gridX, int gridY, Color color, int gridCols, int gridRows, HashSet<Point> visitados)
+        {
+            // Validación de límites
+            if (gridX < 0 || gridX >= gridCols || gridY < 0 || gridY >= gridRows)
+            {
+                return;
+            }
+
+            // Si ya fue visitado, saltar
+            if (visitados.Contains(new Point(gridX, gridY)))
+            {
+                return;
+            }
+
+            // Si es un borde, detener
+            if (EsCuadradoBorde(gridX, gridY))
+            {
+                return;
+            }
+
+            // Si no es del color objetivo, detener
+            if (!EsCuadradoDelColorObjetivo(gridX, gridY))
+            {
+                return;
+            }
+
+            // Encontrar el inicio de la línea (scanline) hacia la izquierda
+            int izquierda = gridX;
+            while (izquierda > 0 && !EsCuadradoBorde(izquierda - 1, gridY) && 
+                   EsCuadradoDelColorObjetivo(izquierda - 1, gridY) &&
+                   !visitados.Contains(new Point(izquierda - 1, gridY)))
+            {
+                izquierda--;
+            }
+
+            // Encontrar el final de la línea (scanline) hacia la derecha
+            int derecha = gridX;
+            while (derecha < gridCols - 1 && !EsCuadradoBorde(derecha + 1, gridY) && 
+                   EsCuadradoDelColorObjetivo(derecha + 1, gridY) &&
+                   !visitados.Contains(new Point(derecha + 1, gridY)))
+            {
+                derecha++;
+            }
+
+            // Rellenar la línea horizontal completa
+            await RellenarLineaHorizontal(izquierda, derecha, gridY, color, visitados);
+
+            // Buscar píxeles arriba y abajo de la línea para continuar el fill
+            await BuscarYRellenarScanlinesSuperior(izquierda, derecha, gridY, color, gridCols, gridRows, visitados);
+            await BuscarYRellenarScanlinesInferior(izquierda, derecha, gridY, color, gridCols, gridRows, visitados);
+        }
+
+        private async Task RellenarLineaHorizontal(int izquierda, int derecha, int y, Color color, HashSet<Point> visitados)
+        {
+            for (int x = izquierda; x <= derecha; x++)
+            {
+                if (!visitados.Contains(new Point(x, y)))
+                {
+                    visitados.Add(new Point(x, y));
+                    PintarCuadrado(x, y, color);
+
+                    // Actualizar la imagen periódicamente para animación
+                    if ((x - izquierda) % 5 == 0) // Actualizar cada 5 píxeles para mejor rendimiento
+                    {
+                        if (mPictureBox != null)
+                        {
+                            mPictureBox.Image = mBitmap;
+                            mPictureBox.Refresh();
+                            await Task.Delay(5);
+                        }
+                    }
+                }
+            }
+
+            // Actualización final de la línea
+            if (mPictureBox != null)
+            {
+                mPictureBox.Image = mBitmap;
+                mPictureBox.Refresh();
+                await Task.Delay(5);
+            }
+        }
+
+        private async Task BuscarYRellenarScanlinesSuperior(int izquierda, int derecha, int y, Color color, int gridCols, int gridRows, HashSet<Point> visitados)
+        {
+            if (y <= 0) return;
+
+            int nuevaY = y - 1;
+            await BuscarYRellenarEnLinea(izquierda, derecha, nuevaY, color, gridCols, gridRows, visitados);
+        }
+
+        private async Task BuscarYRellenarScanlinesInferior(int izquierda, int derecha, int y, Color color, int gridCols, int gridRows, HashSet<Point> visitados)
+        {
+            if (y >= gridRows - 1) return;
+
+            int nuevaY = y + 1;
+            await BuscarYRellenarEnLinea(izquierda, derecha, nuevaY, color, gridCols, gridRows, visitados);
+        }
+
+        private async Task BuscarYRellenarEnLinea(int izquierda, int derecha, int y, Color color, int gridCols, int gridRows, HashSet<Point> visitados)
+        {
+            int x = izquierda;
+            while (x <= derecha)
+            {
+                // Saltar píxeles que son bordes o ya visitados
+                while (x <= derecha && (EsCuadradoBorde(x, y) || 
+                       visitados.Contains(new Point(x, y)) || 
+                       !EsCuadradoDelColorObjetivo(x, y)))
+                {
+                    x++;
+                }
+
+                if (x > derecha) break;
+
+                // Encontramos un píxel válido, iniciar scanline desde aquí
+                await ScanlineFillRecursivo(x, y, color, gridCols, gridRows, visitados);
+
+                // Avanzar hasta encontrar un píxel no válido
+                while (x <= derecha && !EsCuadradoBorde(x, y) && 
+                       !visitados.Contains(new Point(x, y)) && 
+                       EsCuadradoDelColorObjetivo(x, y))
+                {
+                    x++;
+                }
+            }
+        }
+
+
+
+        public async Task IniciarFloodFill(int x, int y, Color nuevoColor)
+        {
+            if (mBitmap == null)
+            {
+                MessageBox.Show("No hay bitmap inicializado", "Error");
+                return;
+            }
+
+            // Convertir coordenadas de píxeles a coordenadas de cuadrícula
+            int gridX = x / mPixelSize;
+            int gridY = y / mPixelSize;
+
+            // Calcular dimensiones de la cuadrícula
+            int gridCols = mBitmap.Width / mPixelSize;
+            int gridRows = mBitmap.Height / mPixelSize;
+
+            // Validar coordenadas de cuadrícula
+            if (gridX < 0 || gridX >= gridCols || gridY < 0 || gridY >= gridRows)
+            {
+                MessageBox.Show($"Coordenadas fuera de rango:\nGrid X: 0-{gridCols - 1}, Grid Y: 0-{gridRows - 1}",
+                                "Error de validación");
+                return;
+            }
+
+            // Guardar el color objetivo (verificar el píxel central del cuadrado)
+            int pixelCenterX = gridX * mPixelSize + mPixelSize / 2;
+            int pixelCenterY = gridY * mPixelSize + mPixelSize / 2;
+            targetColor = mBitmap.GetPixel(pixelCenterX, pixelCenterY);
+
+            // Si el color objetivo es igual al nuevo color, no hacer nada
+            if (targetColor.ToArgb() == nuevoColor.ToArgb())
+            {
+                MessageBox.Show("El color seleccionado es el mismo que el área", "Información");
+                return;
+            }
+
+            try
+            {
+                // Llamar al algoritmo ITERATIVO con animación (usando coordenadas de cuadrícula)
+                await MiFloodFillIterativo(gridX, gridY, nuevoColor, gridCols, gridRows);
+
+                // Actualizar la imagen del PictureBox (final)
+                if (mPictureBox != null)
+                {
+                    mPictureBox.Image = mBitmap;
+                    mPictureBox.Refresh();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al colorear: {ex.Message}\nStack: {ex.StackTrace}", "Error");
+            }
+        }
+
+
+
+        public Bitmap ObtenerBitmap()
+        {
+            return mBitmap;
+        }
+    }
+}
+

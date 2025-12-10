@@ -1,0 +1,324 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    internal class CRellenoFigLineas
+    {
+        private Bitmap mBitmap;
+        private int canvasPixelRows = 0;
+        private int canvasPixelCols = 0;
+        private Color targetColor;
+        private PictureBox mPictureBox;
+
+        public CRellenoFigLineas()
+        {
+            mBitmap = null;
+            mPictureBox = null;
+        }
+
+        public void Initialize(PictureBox picCanvas)
+        {
+            mPictureBox = picCanvas;
+
+            if (mPictureBox.Image != null)
+            {
+                mBitmap = new Bitmap(mPictureBox.Image);
+            }
+            else
+            {
+                mBitmap = new Bitmap(mPictureBox.Width, mPictureBox.Height);
+                using (Graphics g = Graphics.FromImage(mBitmap))
+                {
+                    g.Clear(Color.White);
+                }
+                mPictureBox.Image = mBitmap;
+            }
+
+            canvasPixelRows = mBitmap.Height;
+            canvasPixelCols = mBitmap.Width;
+        }
+
+        public void Redimensionar(int nuevoAncho, int nuevoAlto)
+        {
+            if (mBitmap == null || mPictureBox == null)
+                return;
+
+            // Crear nuevo bitmap con el nuevo tamaño
+            Bitmap nuevoBitmap = new Bitmap(nuevoAncho, nuevoAlto);
+            
+            using (Graphics g = Graphics.FromImage(nuevoBitmap))
+            {
+                // Llenar con color blanco
+                g.Clear(Color.White);
+                
+                // Copiar el contenido anterior
+                if (mBitmap != null)
+                {
+                    g.DrawImage(mBitmap, 0, 0);
+                }
+            }
+
+            // Reemplazar el bitmap anterior
+            mBitmap = nuevoBitmap;
+            mPictureBox.Image = mBitmap;
+            
+            canvasPixelRows = mBitmap.Height;
+            canvasPixelCols = mBitmap.Width;
+        }
+
+        public void ActualizarBitmap()
+        {
+            if (mPictureBox != null && mPictureBox.Image != null)
+            {
+                mBitmap = new Bitmap(mPictureBox.Image);
+                canvasPixelRows = mBitmap.Height;
+                canvasPixelCols = mBitmap.Width;
+            }
+        }
+
+        private void PintarPixel(int x, int y, Color color)
+        {
+            if (x >= 0 && x < mBitmap.Width && y >= 0 && y < mBitmap.Height)
+            {
+                mBitmap.SetPixel(x, y, color);
+            }
+        }
+
+        private bool EsPixelDelColorObjetivo(int x, int y)
+        {
+            if (x < 0 || x >= mBitmap.Width || y < 0 || y >= mBitmap.Height)
+                return false;
+
+            Color pixelColor = mBitmap.GetPixel(x, y);
+            return pixelColor.ToArgb() == targetColor.ToArgb();
+        }
+
+        private bool EsPixelBorde(int x, int y)
+        {
+            if (x < 0 || x >= mBitmap.Width || y < 0 || y >= mBitmap.Height)
+                return true;
+
+            Color pixelColor = mBitmap.GetPixel(x, y);
+            int argb = pixelColor.ToArgb();
+
+            // Detectar las líneas del dibujo (negro) como bordes
+            return argb == Color.Black.ToArgb() ||
+                   argb == Color.Blue.ToArgb() ||
+                   argb == Color.Red.ToArgb();
+        }
+
+        // Algoritmo Scanline Flood Fill (píxel por píxel)
+        private async Task ScanlineFillRecursivo(int x, int y, Color color, HashSet<Point> visitados)
+        {
+            // Validación de límites del canvas
+            if (x < 0 || x >= mBitmap.Width || y < 0 || y >= mBitmap.Height)
+            {
+                return;
+            }
+
+            // Si ya fue visitado, saltar
+            if (visitados.Contains(new Point(x, y)))
+            {
+                return;
+            }
+
+            // Si es un borde (línea negra del dibujo), detener
+            if (EsPixelBorde(x, y))
+            {
+                return;
+            }
+
+            // Si no es del color objetivo, detener
+            if (!EsPixelDelColorObjetivo(x, y))
+            {
+                return;
+            }
+
+            // Encontrar el inicio de la línea (scanline) hacia la izquierda
+            int izquierda = x;
+            while (izquierda > 0 && !EsPixelBorde(izquierda - 1, y) &&
+                   EsPixelDelColorObjetivo(izquierda - 1, y) &&
+                   !visitados.Contains(new Point(izquierda - 1, y)))
+            {
+                izquierda--;
+            }
+
+            // Encontrar el final de la línea (scanline) hacia la derecha
+            int derecha = x;
+            while (derecha < mBitmap.Width - 1 && !EsPixelBorde(derecha + 1, y) &&
+                   EsPixelDelColorObjetivo(derecha + 1, y) &&
+                   !visitados.Contains(new Point(derecha + 1, y)))
+            {
+                derecha++;
+            }
+
+            // Rellenar la línea horizontal completa
+            await RellenarLineaHorizontal(izquierda, derecha, y, color, visitados);
+
+            // Buscar píxeles arriba y abajo de la línea para continuar el fill
+            await BuscarYRellenarScanlinesSuperior(izquierda, derecha, y, color, visitados);
+            await BuscarYRellenarScanlinesInferior(izquierda, derecha, y, color, visitados);
+        }
+
+        private async Task RellenarLineaHorizontal(int izquierda, int derecha, int y, Color color, HashSet<Point> visitados)
+        {
+            for (int x = izquierda; x <= derecha; x++)
+            {
+                if (!visitados.Contains(new Point(x, y)))
+                {
+                    visitados.Add(new Point(x, y));
+                    PintarPixel(x, y, color);
+
+                    // Actualizar la imagen periódicamente para animación
+                    if ((x - izquierda) % 50 == 0)
+                    {
+                        if (mPictureBox != null && mPictureBox.InvokeRequired)
+                        {
+                            mPictureBox.Invoke(new Action(() =>
+                            {
+                                mPictureBox.Image = mBitmap;
+                                mPictureBox.Refresh();
+                            }));
+                            await Task.Delay(1);
+                        }
+                        else if (mPictureBox != null)
+                        {
+                            mPictureBox.Image = mBitmap;
+                            mPictureBox.Refresh();
+                            await Task.Delay(1);
+                        }
+                    }
+                }
+            }
+
+            // Actualización final de la línea
+            if (mPictureBox != null && mPictureBox.InvokeRequired)
+            {
+                mPictureBox.Invoke(new Action(() =>
+                {
+                    mPictureBox.Image = mBitmap;
+                    mPictureBox.Refresh();
+                }));
+                await Task.Delay(1);
+            }
+            else if (mPictureBox != null)
+            {
+                mPictureBox.Image = mBitmap;
+                mPictureBox.Refresh();
+                await Task.Delay(1);
+            }
+        }
+
+        private async Task BuscarYRellenarScanlinesSuperior(int izquierda, int derecha, int y, Color color, HashSet<Point> visitados)
+        {
+            if (y <= 0) return;
+
+            int nuevaY = y - 1;
+            await BuscarYRellenarEnLinea(izquierda, derecha, nuevaY, color, visitados);
+        }
+
+        private async Task BuscarYRellenarScanlinesInferior(int izquierda, int derecha, int y, Color color, HashSet<Point> visitados)
+        {
+            if (y >= mBitmap.Height - 1) return;
+
+            int nuevaY = y + 1;
+            await BuscarYRellenarEnLinea(izquierda, derecha, nuevaY, color, visitados);
+        }
+
+        private async Task BuscarYRellenarEnLinea(int izquierda, int derecha, int y, Color color, HashSet<Point> visitados)
+        {
+            int x = izquierda;
+            while (x <= derecha)
+            {
+                // Saltar píxeles que son bordes o ya visitados
+                while (x <= derecha && (EsPixelBorde(x, y) ||
+                       visitados.Contains(new Point(x, y)) ||
+                       !EsPixelDelColorObjetivo(x, y)))
+                {
+                    x++;
+                }
+
+                if (x > derecha) break;
+
+                // Encontramos un píxel válido, iniciar scanline desde aquí
+                await ScanlineFillRecursivo(x, y, color, visitados);
+
+                // Avanzar hasta encontrar un píxel no válido
+                while (x <= derecha && !EsPixelBorde(x, y) &&
+                       !visitados.Contains(new Point(x, y)) &&
+                       EsPixelDelColorObjetivo(x, y))
+                {
+                    x++;
+                }
+            }
+        }
+
+        public async Task IniciarFloodFill(int x, int y, Color nuevoColor)
+        {
+            if (mBitmap == null)
+            {
+                return;
+            }
+
+            // Validar coordenadas de píxel
+            if (x < 0 || x >= mBitmap.Width || y < 0 || y >= mBitmap.Height)
+            {
+                return;
+            }
+
+            // Guardar el color objetivo (el color del píxel clickeado)
+            targetColor = mBitmap.GetPixel(x, y);
+
+            // Si el píxel clickeado es una línea negra (borde), no hacer nada
+            if (targetColor.ToArgb() == Color.Black.ToArgb())
+            {
+                return;
+            }
+
+            // Si el color objetivo es igual al nuevo color, no hacer nada
+            if (targetColor.ToArgb() == nuevoColor.ToArgb())
+            {
+                return;
+            }
+
+            try
+            {
+                // Crear HashSet para rastrear píxeles visitados
+                HashSet<Point> visitados = new HashSet<Point>();
+
+                // Llamar al algoritmo Scanline Flood Fill recursivo con animación
+                await ScanlineFillRecursivo(x, y, nuevoColor, visitados);
+
+                // Actualizar la imagen del PictureBox (final)
+                if (mPictureBox != null && mPictureBox.InvokeRequired)
+                {
+                    mPictureBox.Invoke(new Action(() =>
+                    {
+                        mPictureBox.Image = mBitmap;
+                        mPictureBox.Refresh();
+                    }));
+                }
+                else if (mPictureBox != null)
+                {
+                    mPictureBox.Image = mBitmap;
+                    mPictureBox.Refresh();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Error silencioso, no mostrar mensaje
+            }
+        }
+
+        public Bitmap ObtenerBitmap()
+        {
+            return mBitmap;
+        }
+    }
+}

@@ -1,0 +1,302 @@
+﻿namespace P2Act25Nov
+{
+    partial class frmDibujosLineas
+    {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows Form Designer generated code
+
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btnColorear = new System.Windows.Forms.Button();
+            this.btnGraficar = new System.Windows.Forms.Button();
+            this.btnSalir = new System.Windows.Forms.Button();
+            this.btnResetear = new System.Windows.Forms.Button();
+            this.grbGafico = new System.Windows.Forms.GroupBox();
+            this.picCanvas = new System.Windows.Forms.PictureBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.btnAplicarRecorte = new System.Windows.Forms.Button();
+            this.btnDefinirVentana = new System.Windows.Forms.Button();
+            this.txtYMax = new System.Windows.Forms.TextBox();
+            this.txtXMax = new System.Windows.Forms.TextBox();
+            this.txtYMin = new System.Windows.Forms.TextBox();
+            this.txtXMin = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.groupBox1.SuspendLayout();
+            this.grbGafico.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picCanvas)).BeginInit();
+            this.groupBox2.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.btnColorear);
+            this.groupBox1.Controls.Add(this.btnGraficar);
+            this.groupBox1.Controls.Add(this.btnSalir);
+            this.groupBox1.Controls.Add(this.btnResetear);
+            this.groupBox1.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.groupBox1.Location = new System.Drawing.Point(11, 279);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(230, 360);
+            this.groupBox1.TabIndex = 21;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Acciones";
+            // 
+            // btnColorear
+            // 
+            this.btnColorear.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnColorear.Location = new System.Drawing.Point(41, 180);
+            this.btnColorear.Name = "btnColorear";
+            this.btnColorear.Size = new System.Drawing.Size(129, 44);
+            this.btnColorear.TabIndex = 15;
+            this.btnColorear.Text = "Colorear";
+            this.btnColorear.UseVisualStyleBackColor = true;
+            this.btnColorear.Click += new System.EventHandler(this.BtnColorear_Click);
+            // 
+            // btnGraficar
+            // 
+            this.btnGraficar.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnGraficar.Location = new System.Drawing.Point(51, 47);
+            this.btnGraficar.Name = "btnGraficar";
+            this.btnGraficar.Size = new System.Drawing.Size(112, 43);
+            this.btnGraficar.TabIndex = 1;
+            this.btnGraficar.Text = "Graficar";
+            this.btnGraficar.UseVisualStyleBackColor = true;
+            this.btnGraficar.Click += new System.EventHandler(this.BtnGraficar_Click);
+            // 
+            // btnSalir
+            // 
+            this.btnSalir.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSalir.Location = new System.Drawing.Point(51, 295);
+            this.btnSalir.Name = "btnSalir";
+            this.btnSalir.Size = new System.Drawing.Size(112, 43);
+            this.btnSalir.TabIndex = 4;
+            this.btnSalir.Text = "Salir";
+            this.btnSalir.UseVisualStyleBackColor = true;
+            this.btnSalir.Click += new System.EventHandler(this.BtnSalir_Click);
+            // 
+            // btnResetear
+            // 
+            this.btnResetear.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnResetear.Location = new System.Drawing.Point(45, 237);
+            this.btnResetear.Name = "btnResetear";
+            this.btnResetear.Size = new System.Drawing.Size(124, 43);
+            this.btnResetear.TabIndex = 5;
+            this.btnResetear.Text = "Resetear";
+            this.btnResetear.UseVisualStyleBackColor = true;
+            this.btnResetear.Click += new System.EventHandler(this.BtnResetear_Click);
+            // 
+            // grbGafico
+            // 
+            this.grbGafico.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.grbGafico.Controls.Add(this.picCanvas);
+            this.grbGafico.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.grbGafico.Location = new System.Drawing.Point(262, 13);
+            this.grbGafico.Name = "grbGafico";
+            this.grbGafico.Size = new System.Drawing.Size(1347, 1090);
+            this.grbGafico.TabIndex = 20;
+            this.grbGafico.TabStop = false;
+            this.grbGafico.Text = "Grafica";
+            // 
+            // picCanvas
+            // 
+            this.picCanvas.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.picCanvas.BackColor = System.Drawing.SystemColors.ButtonFace;
+            this.picCanvas.Location = new System.Drawing.Point(21, 34);
+            this.picCanvas.Name = "picCanvas";
+            this.picCanvas.Size = new System.Drawing.Size(1305, 1033);
+            this.picCanvas.TabIndex = 3;
+            this.picCanvas.TabStop = false;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Times New Roman", 18F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic))));
+            this.label5.Location = new System.Drawing.Point(30, 65);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(203, 164);
+            this.label5.TabIndex = 19;
+            this.label5.Text = "Graficar \r\nfiguras\r\ncon líneas y \r\ncolorear";
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.btnAplicarRecorte);
+            this.groupBox2.Controls.Add(this.btnDefinirVentana);
+            this.groupBox2.Controls.Add(this.txtYMax);
+            this.groupBox2.Controls.Add(this.txtXMax);
+            this.groupBox2.Controls.Add(this.txtYMin);
+            this.groupBox2.Controls.Add(this.txtXMin);
+            this.groupBox2.Controls.Add(this.label4);
+            this.groupBox2.Controls.Add(this.label3);
+            this.groupBox2.Controls.Add(this.label2);
+            this.groupBox2.Controls.Add(this.label1);
+            this.groupBox2.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.groupBox2.Location = new System.Drawing.Point(11, 655);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(230, 320);
+            this.groupBox2.TabIndex = 22;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Cohen-Sutherland";
+            // 
+            // btnAplicarRecorte
+            // 
+            this.btnAplicarRecorte.Font = new System.Drawing.Font("Times New Roman", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnAplicarRecorte.Location = new System.Drawing.Point(28, 267);
+            this.btnAplicarRecorte.Name = "btnAplicarRecorte";
+            this.btnAplicarRecorte.Size = new System.Drawing.Size(172, 35);
+            this.btnAplicarRecorte.TabIndex = 9;
+            this.btnAplicarRecorte.Text = "Aplicar Recorte";
+            this.btnAplicarRecorte.UseVisualStyleBackColor = true;
+            // 
+            // btnDefinirVentana
+            // 
+            this.btnDefinirVentana.Font = new System.Drawing.Font("Times New Roman", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnDefinirVentana.Location = new System.Drawing.Point(28, 221);
+            this.btnDefinirVentana.Name = "btnDefinirVentana";
+            this.btnDefinirVentana.Size = new System.Drawing.Size(172, 35);
+            this.btnDefinirVentana.TabIndex = 8;
+            this.btnDefinirVentana.Text = "Definir Ventana";
+            this.btnDefinirVentana.UseVisualStyleBackColor = true;
+            // 
+            // txtYMax
+            // 
+            this.txtYMax.Location = new System.Drawing.Point(92, 177);
+            this.txtYMax.Name = "txtYMax";
+            this.txtYMax.Size = new System.Drawing.Size(100, 26);
+            this.txtYMax.TabIndex = 7;
+            this.txtYMax.Text = "400";
+            // 
+            // txtXMax
+            // 
+            this.txtXMax.Location = new System.Drawing.Point(92, 134);
+            this.txtXMax.Name = "txtXMax";
+            this.txtXMax.Size = new System.Drawing.Size(100, 26);
+            this.txtXMax.TabIndex = 6;
+            this.txtXMax.Text = "400";
+            // 
+            // txtYMin
+            // 
+            this.txtYMin.Location = new System.Drawing.Point(92, 91);
+            this.txtYMin.Name = "txtYMin";
+            this.txtYMin.Size = new System.Drawing.Size(100, 26);
+            this.txtYMin.TabIndex = 5;
+            this.txtYMin.Text = "100";
+            // 
+            // txtXMin
+            // 
+            this.txtXMin.Location = new System.Drawing.Point(92, 48);
+            this.txtXMin.Name = "txtXMin";
+            this.txtXMin.Size = new System.Drawing.Size(100, 26);
+            this.txtXMin.TabIndex = 4;
+            this.txtXMin.Text = "100";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(24, 180);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(56, 19);
+            this.label4.TabIndex = 3;
+            this.label4.Text = "Y Max:";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(24, 137);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(58, 19);
+            this.label3.TabIndex = 2;
+            this.label3.Text = "X Max:";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(24, 94);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(53, 19);
+            this.label2.TabIndex = 1;
+            this.label2.Text = "Y Min:";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(24, 51);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(55, 19);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "X Min:";
+            // 
+            // frmDibujosLineas
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(1621, 1116);
+            this.Controls.Add(this.groupBox2);
+            this.Controls.Add(this.groupBox1);
+            this.Controls.Add(this.grbGafico);
+            this.Controls.Add(this.label5);
+            this.Name = "frmDibujosLineas";
+            this.Text = "frmDibujosLineas";
+            this.WindowState = System.Windows.Forms.FormWindowState.Minimized;
+            this.groupBox1.ResumeLayout(false);
+            this.grbGafico.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.picCanvas)).EndInit();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
+        }
+
+        #endregion
+
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.Button btnColorear;
+        private System.Windows.Forms.Button btnGraficar;
+        private System.Windows.Forms.Button btnSalir;
+        private System.Windows.Forms.Button btnResetear;
+        private System.Windows.Forms.GroupBox grbGafico;
+        private System.Windows.Forms.PictureBox picCanvas;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.Button btnAplicarRecorte;
+        private System.Windows.Forms.Button btnDefinirVentana;
+        private System.Windows.Forms.TextBox txtYMax;
+        private System.Windows.Forms.TextBox txtXMax;
+        private System.Windows.Forms.TextBox txtYMin;
+        private System.Windows.Forms.TextBox txtXMin;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label1;
+    }
+}

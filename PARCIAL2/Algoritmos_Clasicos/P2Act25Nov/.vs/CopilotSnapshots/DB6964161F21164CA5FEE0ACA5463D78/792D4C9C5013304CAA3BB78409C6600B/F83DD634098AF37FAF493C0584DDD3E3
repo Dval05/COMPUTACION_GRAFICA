@@ -1,0 +1,342 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    internal class CColorear
+    {
+        private Bitmap mBitmap;
+        private int mPixelSize = 10; // Tamaño de cada píxel en la cuadrícula (configurable)
+        private int canvasPixelRows = 0;
+        private int canvasPixelCols = 0;
+        private Color targetColor; // Color objetivo a reemplazar
+        private PictureBox mPictureBox; // Referencia al PictureBox
+
+        public CColorear()
+        {
+            mBitmap = null;
+            mPictureBox = null;
+        }
+
+        // Inicializar con el PictureBox y Bitmap
+        public void Initialize(PictureBox picCanvas)
+        {
+            mPictureBox = picCanvas;
+
+            // Si el PictureBox ya tiene una imagen, usarla
+            if (mPictureBox.Image != null)
+            {
+                mBitmap = new Bitmap(mPictureBox.Image);
+            }
+            else
+            {
+                // Crear un nuevo bitmap del tamaño del PictureBox
+                mBitmap = new Bitmap(mPictureBox.Width, mPictureBox.Height);
+                using (Graphics g = Graphics.FromImage(mBitmap))
+                {
+                    g.Clear(Color.White);
+                }
+                mPictureBox.Image = mBitmap;
+            }
+
+            canvasPixelRows = mBitmap.Height;
+            canvasPixelCols = mBitmap.Width;
+        }
+
+        // Establecer el tamaño del píxel (debe coincidir con el PIXEL_SIZE de la clase que lo llama)
+        public void SetPixelSize(int pixelSize)
+        {
+            mPixelSize = pixelSize;
+        }
+
+        // Actualizar el bitmap después de dibujar figuras
+        public void ActualizarBitmap()
+        {
+            if (mPictureBox != null && mPictureBox.Image != null)
+            {
+                mBitmap = new Bitmap(mPictureBox.Image);
+                canvasPixelRows = mBitmap.Height;
+                canvasPixelCols = mBitmap.Width;
+            }
+        }
+
+        // Pintar un cuadrado completo de la cuadrícula (como lo hace CCircunferencia)
+        private void PintarCuadrado(int gridX, int gridY, Color color)
+        {
+            using (Graphics g = Graphics.FromImage(mBitmap))
+            using (SolidBrush brush = new SolidBrush(color))
+            {
+                // Pintar el cuadrado completo de mPixelSize x mPixelSize
+                g.FillRectangle(brush, gridX * mPixelSize, gridY * mPixelSize, mPixelSize, mPixelSize);
+            }
+        }
+
+        // Verificar si un cuadrado de la cuadrícula es del color objetivo
+        private bool EsCuadradoDelColorObjetivo(int gridX, int gridY)
+        {
+            // Verificar el píxel central del cuadrado
+            int pixelX = gridX * mPixelSize + mPixelSize / 2;
+            int pixelY = gridY * mPixelSize + mPixelSize / 2;
+            
+            if (pixelX < 0 || pixelX >= mBitmap.Width || pixelY < 0 || pixelY >= mBitmap.Height)
+                return false;
+            
+            Color pixelColor = mBitmap.GetPixel(pixelX, pixelY);
+            return pixelColor.ToArgb() == targetColor.ToArgb();
+        }
+        
+        // Verificar si un cuadrado es un borde (azul, rojo o negro)
+        private bool EsCuadradoBorde(int gridX, int gridY)
+        {
+            // Verificar el píxel central del cuadrado
+            int pixelX = gridX * mPixelSize + mPixelSize / 2;
+            int pixelY = gridY * mPixelSize + mPixelSize / 2;
+            
+            if (pixelX < 0 || pixelX >= mBitmap.Width || pixelY < 0 || pixelY >= mBitmap.Height)
+                return true; // Fuera de límites = borde
+            
+            Color pixelColor = mBitmap.GetPixel(pixelX, pixelY);
+            int argb = pixelColor.ToArgb();
+            
+            return argb == Color.Blue.ToArgb() || 
+                   argb == Color.Red.ToArgb() || 
+                   argb == Color.Black.ToArgb();
+        }
+
+        private async Task MiFloodFillAsync(int gridX, int gridY, Color color)
+        {
+            // Calcular las dimensiones de la cuadrícula
+            int gridCols = mBitmap.Width / mPixelSize;
+            int gridRows = mBitmap.Height / mPixelSize;
+            
+            // Usar una pila (Stack) para el algoritmo iterativo
+            Stack<Point> pila = new Stack<Point>();
+            HashSet<Point> visitados = new HashSet<Point>();
+            
+            // Agregar el punto inicial (en coordenadas de cuadrícula)
+            pila.Push(new Point(gridX, gridY));
+            
+            // Procesar mientras haya puntos en la pila
+            while (pila.Count > 0)
+            {
+                Point puntoActual = pila.Pop();
+                
+                // Validación de límites de la cuadrícula
+                if (puntoActual.X < 0 || puntoActual.X >= gridCols || 
+                    puntoActual.Y < 0 || puntoActual.Y >= gridRows)
+                {
+                    continue;
+                }
+                
+                // Si ya fue visitado, saltar
+                if (visitados.Contains(puntoActual))
+                {
+                    continue;
+                }
+                
+                // Marcar como visitado
+                visitados.Add(puntoActual);
+                
+                // Si es un borde, detener
+                if (EsCuadradoBorde(puntoActual.X, puntoActual.Y))
+                {
+                    continue;
+                }
+                
+                // Si es del color objetivo, pintar
+                if (EsCuadradoDelColorObjetivo(puntoActual.X, puntoActual.Y))
+                {
+                    // Pintar el cuadrado completo
+                    PintarCuadrado(puntoActual.X, puntoActual.Y, color);
+                   
+                    
+                    // Actualizar la imagen para mostrar animación
+                    if (mPictureBox != null)
+                    {
+                        mPictureBox.Image = mBitmap;
+                        mPictureBox.Refresh();
+                        await Task.Delay(10); // Pausa para ver la animación
+                    }
+                    
+                    // Agregar vecinos en orden: Oeste, Sur, Este, Norte (orden inverso por Stack LIFO)
+                    // Esto hará que se procesen en orden: Norte, Este, Sur, Oeste
+                    pila.Push(new Point(puntoActual.X - 1, puntoActual.Y));     // Izquierda (Oeste)
+                    pila.Push(new Point(puntoActual.X, puntoActual.Y + 1));     // Abajo (Sur)
+                    pila.Push(new Point(puntoActual.X + 1, puntoActual.Y));     // Derecha (Este)
+                    pila.Push(new Point(puntoActual.X, puntoActual.Y - 1));     // Arriba (Norte)
+                }
+            }
+        }
+
+        // Método para encontrar el centro de una figura cerrada
+        public Point EncontrarCentroFigura()
+        {
+            if (mBitmap == null)
+            {
+                return new Point(canvasPixelCols / 2, canvasPixelRows / 2);
+            }
+
+            // Buscar el centro del canvas como punto de inicio predeterminado
+            return new Point(canvasPixelCols / 2, canvasPixelRows / 2);
+        }
+
+        // Método para encontrar el centro de una región específica (bounding box)
+        public Point EncontrarCentroRegion(Color colorBorde)
+        {
+            if (mBitmap == null)
+            {
+                return new Point(canvasPixelCols / 2, canvasPixelRows / 2);
+            }
+
+            int minX = canvasPixelCols;
+            int maxX = 0;
+            int minY = canvasPixelRows;
+            int maxY = 0;
+            bool encontrado = false;
+
+            // Buscar los límites de la figura
+            for (int y = 0; y < canvasPixelRows; y++)
+            {
+                for (int x = 0; x < canvasPixelCols; x++)
+                {
+                    Color pixelColor = mBitmap.GetPixel(x, y);
+                    
+                    // Si encontramos el color del borde
+                    if (pixelColor.ToArgb() == colorBorde.ToArgb())
+                    {
+                        encontrado = true;
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            }
+
+            if (encontrado)
+            {
+                // Calcular el centro del bounding box
+                int centroX = (minX + maxX) / 2;
+                int centroY = (minY + maxY) / 2;
+                return new Point(centroX, centroY);
+            }
+
+            // Si no se encontró, retornar el centro del canvas
+            return new Point(canvasPixelCols / 2, canvasPixelRows / 2);
+        }
+
+        // Método público para colorear desde el centro (para usar con botón)
+        public async Task ColorearDesdeCentro(Color nuevoColor)
+        {
+            Point centro = EncontrarCentroFigura();
+            await IniciarFloodFill(centro.X, centro.Y, nuevoColor);
+        }
+
+        // Método público para colorear desde el centro de una región específica
+        public async Task ColorearDesdeCentroRegion(Color colorBorde, Color nuevoColor)
+        {
+            Point centro = EncontrarCentroRegion(colorBorde);
+            await IniciarFloodFill(centro.X, centro.Y, nuevoColor);
+        }
+
+        public async Task IniciarFloodFill(int x, int y, Color nuevoColor)
+        {
+            if (mBitmap == null)
+            {
+                MessageBox.Show("No hay bitmap inicializado", "Error");
+                return;
+            }
+
+            // Convertir coordenadas de píxeles a coordenadas de cuadrícula
+            int gridX = x / PIXEL_SIZE;
+            int gridY = y / PIXEL_SIZE;
+            
+            // Calcular dimensiones de la cuadrícula
+            int gridCols = mBitmap.Width / PIXEL_SIZE;
+            int gridRows = mBitmap.Height / PIXEL_SIZE;
+
+            // Validar coordenadas de cuadrícula
+            if (gridX < 0 || gridX >= gridCols || gridY < 0 || gridY >= gridRows)
+            {
+                MessageBox.Show($"Coordenadas fuera de rango:\nGrid X: 0-{gridCols - 1}, Grid Y: 0-{gridRows - 1}", 
+                                "Error de validación");
+                return;
+            }
+
+            // Guardar el color objetivo (verificar el píxel central del cuadrado)
+            int pixelCenterX = gridX * PIXEL_SIZE + PIXEL_SIZE / 2;
+            int pixelCenterY = gridY * PIXEL_SIZE + PIXEL_SIZE / 2;
+            targetColor = mBitmap.GetPixel(pixelCenterX, pixelCenterY);
+
+           
+
+            // Si el color objetivo es igual al nuevo color, no hacer nada
+            if (targetColor.ToArgb() == nuevoColor.ToArgb())
+            {
+                MessageBox.Show("El color seleccionado es el mismo que el área", "Información");
+                return;
+            }
+
+            try
+            {
+                
+                
+                // Llamar al algoritmo iterativo con animación (usando coordenadas de cuadrícula)
+                await MiFloodFillAsync(gridX, gridY, nuevoColor);
+
+                // Actualizar la imagen del PictureBox (final)
+                if (mPictureBox != null)
+                {
+                    mPictureBox.Image = mBitmap;
+                    mPictureBox.Refresh();
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error al colorear: {ex.Message}\nStack: {ex.StackTrace}", "Error");
+            }
+        }
+
+        // Obtener el color en una posición específica
+        public Color ObtenerColor(int x, int y)
+        {
+            if (mBitmap == null || x < 0 || x >= canvasPixelCols || y < 0 || y >= canvasPixelRows)
+            {
+                return Color.Empty;
+            }
+
+            return mBitmap.GetPixel(x, y);
+        }
+
+        // Limpiar el canvas
+        public void LimpiarCanvas(Color colorFondo)
+        {
+            if (mBitmap != null)
+            {
+                using (Graphics g = Graphics.FromImage(mBitmap))
+                {
+                    g.Clear(colorFondo);
+                }
+
+                if (mPictureBox != null)
+                {
+                    mPictureBox.Image = mBitmap;
+                    mPictureBox.Refresh();
+                }
+            }
+        }
+
+        // Obtener el bitmap actual
+        public Bitmap ObtenerBitmap()
+        {
+            return mBitmap;
+        }
+    }
+}
+

@@ -1,0 +1,156 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace P2Act25Nov
+{
+    public partial class frmDibujosLineas : Form
+    {
+        public frmDibujosLineas()
+        {
+            InitializeComponent();
+            InicializarComponentes();
+        }
+
+        private CDibujar dibujar;
+        private CRellenoFigLineas colorear;
+        private bool modoDibujar = true;
+
+
+        private void InicializarComponentes()
+        {
+            // Inicializar las clases
+            dibujar = new CDibujar();
+            colorear = new CRellenoFigLineas();
+
+            dibujar.Initialize(picCanvas);
+            colorear.Initialize(picCanvas);
+
+            // Configurar eventos
+            btnGraficar.Click += BtnGraficar_Click;
+            btnColorear.Click += BtnColorear_Click;
+            btnResetear.Click += BtnResetear_Click;
+            btnSalir.Click += BtnSalir_Click;
+
+            picCanvas.MouseClick += PicCanvas_MouseClick;
+            picCanvas.Paint += PicCanvas_Paint;
+            picCanvas.MouseMove += PicCanvas_MouseMove;
+            picCanvas.Resize += PicCanvas_Resize;
+
+            // Configurar el color y grosor inicial
+            dibujar.SetColor(Color.Black);
+            dibujar.SetGrosor(2);
+
+            // Estado inicial
+            ActualizarEstadoBotones();
+        }
+
+        private void BtnGraficar_Click(object sender, EventArgs e)
+        {
+            dibujar.ActualizarBitmap();
+            ActualizarEstadoBotones();
+        }
+
+        private void BtnColorear_Click(object sender, EventArgs e)
+        {
+            modoDibujar = false;
+            colorear.ActualizarBitmap();
+            ActualizarEstadoBotones();
+        }
+
+        private void BtnResetear_Click(object sender, EventArgs e)
+        {
+            dibujar.Limpiar();
+            colorear.ActualizarBitmap();
+        }
+
+        private void BtnSalir_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        private void PicCanvas_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (modoDibujar)
+            {
+                dibujar.OnMouseClick(e.X, e.Y);
+            }
+            else
+            {
+                // Modo colorear
+                ColorDialog colorDialog = new ColorDialog();
+                if (colorDialog.ShowDialog() == DialogResult.OK)
+                {
+                    Task.Run(async () =>
+                    {
+                        await colorear.IniciarFloodFill(e.X, e.Y, colorDialog.Color);
+
+                        // Actualizar el bitmap del dibujador en el thread UI
+                        if (picCanvas.InvokeRequired)
+                        {
+                            picCanvas.Invoke(new Action(() =>
+                            {
+                                dibujar.ActualizarBitmap();
+                            }));
+                        }
+                        else
+                        {
+                            dibujar.ActualizarBitmap();
+                        }
+                    });
+                }
+            }
+        }
+
+        private void PicCanvas_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (modoDibujar && dibujar.TienePuntoInicial())
+            {
+                picCanvas.Invalidate();
+            }
+        }
+
+        private void PicCanvas_Paint(object sender, PaintEventArgs e)
+        {
+            if (modoDibujar && dibujar.TienePuntoInicial())
+            {
+                Point? puntoInicial = dibujar.ObtenerPuntoInicial();
+                if (puntoInicial.HasValue)
+                {
+                    Point posicionMouse = picCanvas.PointToClient(Cursor.Position);
+                    dibujar.OnMouseMove(posicionMouse.X, posicionMouse.Y, e.Graphics);
+                }
+            }
+        }
+
+        private void PicCanvas_Resize(object sender, EventArgs e)
+        {
+            // Redimensionar los bitmaps preservando el contenido
+            if (picCanvas.Width > 0 && picCanvas.Height > 0)
+            {
+                dibujar.Redimensionar(picCanvas.Width, picCanvas.Height);
+                colorear.Redimensionar(picCanvas.Width, picCanvas.Height);
+            }
+        }
+
+        private void ActualizarEstadoBotones()
+        {
+            if (modoDibujar)
+            {
+                btnGraficar.BackColor = Color.LightGreen;
+                btnColorear.BackColor = SystemColors.Control;
+            }
+            else
+            {
+                btnGraficar.BackColor = SystemColors.Control;
+                btnColorear.BackColor = Color.LightBlue;
+            }
+        }
+    }
+}
