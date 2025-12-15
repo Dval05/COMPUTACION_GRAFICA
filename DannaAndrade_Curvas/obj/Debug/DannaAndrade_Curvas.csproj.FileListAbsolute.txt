@@ -1,0 +1,13 @@
+C:\Users\andra\source\repos\DannaAndrade_Curvas\bin\Debug\DannaAndrade_Curvas.exe.config
+C:\Users\andra\source\repos\DannaAndrade_Curvas\bin\Debug\DannaAndrade_Curvas.exe
+C:\Users\andra\source\repos\DannaAndrade_Curvas\bin\Debug\DannaAndrade_Curvas.pdb
+C:\Users\andra\source\repos\DannaAndrade_Curvas\obj\Debug\DannaAndrade_Curvas.csproj.AssemblyReference.cache
+C:\Users\andra\source\repos\DannaAndrade_Curvas\obj\Debug\DannaAndrade_Curvas.Form1.resources
+C:\Users\andra\source\repos\DannaAndrade_Curvas\obj\Debug\DannaAndrade_Curvas.frmBezier.resources
+C:\Users\andra\source\repos\DannaAndrade_Curvas\obj\Debug\DannaAndrade_Curvas.Properties.Resources.resources
+C:\Users\andra\source\repos\DannaAndrade_Curvas\obj\Debug\DannaAndrade_Curvas.csproj.GenerateResource.cache
+C:\Users\andra\source\repos\DannaAndrade_Curvas\obj\Debug\DannaAndrade_Curvas.csproj.CoreCompileInputs.cache
+C:\Users\andra\source\repos\DannaAndrade_Curvas\obj\Debug\DannaAndrade_Curvas.exe
+C:\Users\andra\source\repos\DannaAndrade_Curvas\obj\Debug\DannaAndrade_Curvas.pdb
+C:\Users\andra\source\repos\DannaAndrade_Curvas\obj\Debug\DannaAndrade_Curvas.exe.config
+C:\Users\andra\source\repos\DannaAndrade_Curvas\obj\Debug\DannaAndrade_Curvas.frmBSpline.resources

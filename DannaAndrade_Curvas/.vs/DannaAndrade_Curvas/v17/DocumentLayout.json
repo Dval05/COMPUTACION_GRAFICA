@@ -1,0 +1,166 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|c:\\users\\andra\\source\\repos\\dannaandrade_curvas\\frmbezier.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|solutionrelative:frmbezier.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmbezier.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|solutionrelative:frmbezier.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmbspline.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|solutionrelative:frmbspline.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmbezier.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|solutionrelative:frmbezier.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\form1.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|solutionrelative:form1.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmbspline.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|solutionrelative:frmbspline.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|solutionrelative:form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\curvemath.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|solutionrelative:curvemath.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmbspline.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{893A5472-BF95-4EE7-9AE2-D533517B5343}|DannaAndrade_Curvas.csproj|solutionrelative:frmbspline.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 6,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{eefa5220-e298-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "frmBSpline.Designer.cs",
+              "DocumentMoniker": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmBSpline.Designer.cs",
+              "RelativeDocumentMoniker": "frmBSpline.Designer.cs",
+              "ToolTip": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmBSpline.Designer.cs",
+              "RelativeToolTip": "frmBSpline.Designer.cs",
+              "ViewState": "AgIAAJoAAAAAAAAAAAAAAJoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-09T17:38:51.292Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "frmBSpline.cs",
+              "DocumentMoniker": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmBSpline.cs",
+              "RelativeDocumentMoniker": "frmBSpline.cs",
+              "ToolTip": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmBSpline.cs",
+              "RelativeToolTip": "frmBSpline.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-09T17:37:56.394Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "frmBSpline.cs [Dise\u00F1o]",
+              "DocumentMoniker": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmBSpline.cs",
+              "RelativeDocumentMoniker": "frmBSpline.cs",
+              "ToolTip": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmBSpline.cs [Dise\u00F1o]",
+              "RelativeToolTip": "frmBSpline.cs [Dise\u00F1o]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-09T17:37:51.937Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "CurveMath.cs",
+              "DocumentMoniker": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\CurveMath.cs",
+              "RelativeDocumentMoniker": "CurveMath.cs",
+              "ToolTip": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\CurveMath.cs",
+              "RelativeToolTip": "CurveMath.cs",
+              "ViewState": "AgIAACAAAAAAAAAAAAAgwGYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-09T17:24:34.348Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "frmBezier.Designer.cs",
+              "DocumentMoniker": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmBezier.Designer.cs",
+              "RelativeDocumentMoniker": "frmBezier.Designer.cs",
+              "ToolTip": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmBezier.Designer.cs",
+              "RelativeToolTip": "frmBezier.Designer.cs",
+              "ViewState": "AgIAAEsAAAAAAAAAAAAmwI0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-09T17:22:31.374Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "frmBezier.cs",
+              "DocumentMoniker": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmBezier.cs",
+              "RelativeDocumentMoniker": "frmBezier.cs",
+              "ToolTip": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmBezier.cs",
+              "RelativeToolTip": "frmBezier.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-09T17:22:22.406Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "frmBezier.cs [Dise\u00F1o]",
+              "DocumentMoniker": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmBezier.cs",
+              "RelativeDocumentMoniker": "frmBezier.cs",
+              "ToolTip": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\frmBezier.cs [Dise\u00F1o]",
+              "RelativeToolTip": "frmBezier.cs [Dise\u00F1o]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-09T17:22:14.852Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Form1.Designer.cs",
+              "DocumentMoniker": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\Form1.Designer.cs",
+              "RelativeDocumentMoniker": "Form1.Designer.cs",
+              "ToolTip": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\Form1.Designer.cs",
+              "RelativeToolTip": "Form1.Designer.cs",
+              "ViewState": "AgIAAAEAAAAAAAAAAIAwwCMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-09T17:19:45.075Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Form1.cs [Dise\u00F1o]",
+              "DocumentMoniker": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\Form1.cs",
+              "RelativeDocumentMoniker": "Form1.cs",
+              "ToolTip": "C:\\Users\\andra\\source\\repos\\DannaAndrade_Curvas\\Form1.cs [Dise\u00F1o]",
+              "RelativeToolTip": "Form1.cs [Dise\u00F1o]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-09T16:56:27.01Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
